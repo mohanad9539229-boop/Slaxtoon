@@ -1,176 +1,482 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قارئ ومترجم المانهوا التلقائي</title>
+  <title>قارئ ومترجم الفصول الكاملة للمانهوا</title>
   <!-- Tailwind CSS عبر CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- مكتبة Tesseract.js للتعرف على النصوص دون الحاجة لسيرفر ذكاء اصطناعي -->
+  <!-- مكتبة Tesseract.js للتعرف على النصوص دون سيرفر -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <!-- أيقونات Lucide -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
+      background-color: #090d16;
+      color: #f1f5f9;
     }
-    .canvas-container canvas {
-      max-width: 100%;
+    /* تحسينات القارئ العمودي للمانهوا */
+    .webtoon-frame canvas, .webtoon-frame img {
+      width: 100%;
       height: auto;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      display: block;
+      margin: 0 auto;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col custom-scrollbar">
 
-  <!-- الهيدر وشريط العنوان -->
-  <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+  <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 p-3 md:p-4 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <div class="bg-indigo-600 p-2 rounded-xl">
-          <i data-lucide="languages" class="w-6 h-6 text-white"></i>
+        <div class="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-500/20">
+          <i data-lucide="book-open-check" class="w-6 h-6 text-white"></i>
         </div>
-        <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-          مترجم المانهوا التلقائي (Vercel Ready)
-        </h1>
+        <div>
+          <h1 class="text-lg md:text-xl font-extrabold bg-gradient-to-r from-indigo-400 via-cyan-400 to-teal-300 bg-clip-text text-transparent">
+            قارئ ومترجم الفصول الكاملة (Webtoon Reader)
+          </h1>
+          <p class="text-xs text-slate-400 hidden sm:block">ترجمة الفصول بالكامل تلقائياً • بدون ذكاء اصطناعي • مجاني 100%</p>
+        </div>
       </div>
-      <div class="text-xs text-slate-400 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
-        بدون ذكاء اصطناعي • مجاني بالكامل • يعتمد على Tesseract.js
+
+      <div class="flex items-center gap-2">
+        <button id="batchTranslateBtn" onclick="translateAllPages()" disabled class="opacity-50 cursor-not-allowed bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-md shadow-indigo-600/30">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>ترجمة الفصل كاملاً</span>
+        </button>
+        <button id="stopTranslateBtn" onclick="stopTranslation()" class="hidden bg-rose-600 hover:bg-rose-500 text-white text-xs md:text-sm font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all">
+          <i data-lucide="square" class="w-4 h-4"></i>
+          <span>إيقاف</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- أدوات التحكم والمدخلات -->
-  <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 space-y-6">
-    
-    <!-- صندوق إدخال رابط الفصل أو الصورة -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-xl">
-      <label class="block text-sm font-medium mb-2 text-slate-300">
-        رابط صورة فريم المانهوا أو رابط الفصل:
-      </label>
-      <div class="flex flex-col md:flex-row gap-3">
-        <input 
-          type="url" 
-          id="imageUrlInput" 
-          placeholder="أدخل رابط صورة الفريم (JPG/PNG)..." 
-          class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors"
-          value="https://picsum.photos/id/1025/600/1000"
-        >
-        <button 
-          onclick="loadAndTranslateImage()" 
-          id="translateBtn"
-          class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/30"
-        >
-          <i data-lucide="sparkles" class="w-4 h-4"></i>
-          <span>جلب وترجمة الفريم</span>
+  <main class="flex-1 max-w-6xl w-full mx-auto p-3 md:p-6 space-y-6">
+
+    <!-- كارت المدخلات وجلب الفصل -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-2xl">
+      
+      <!-- أزرار التبديل بين أساليب إدخال الفصل -->
+      <div class="flex border-b border-slate-800 pb-3 mb-4 gap-2 text-xs md:text-sm">
+        <button onclick="switchTab('urlTab')" id="tabBtn-urlTab" class="tab-btn px-4 py-2 rounded-xl font-bold bg-indigo-600 text-white transition-all flex items-center gap-2">
+          <i data-lucide="link" class="w-4 h-4"></i> رابط الفصل الكامل
+        </button>
+        <button onclick="switchTab('multiUrlTab')" id="tabBtn-multiUrlTab" class="tab-btn px-4 py-2 rounded-xl font-medium text-slate-400 hover:bg-slate-800 transition-all flex items-center gap-2">
+          <i data-lucide="list" class="w-4 h-4"></i> روابط صور متعددة
+        </button>
+        <button onclick="switchTab('fileTab')" id="tabBtn-fileTab" class="tab-btn px-4 py-2 rounded-xl font-medium text-slate-400 hover:bg-slate-800 transition-all flex items-center gap-2">
+          <i data-lucide="upload" class="w-4 h-4"></i> رفع صور من الجهاز
         </button>
       </div>
 
-      <!-- إعدادات إضافية خفيفة -->
-      <div class="mt-4 flex flex-wrap gap-4 text-xs text-slate-400 border-t border-slate-800/60 pt-3">
-        <div class="flex items-center gap-2">
-          <span>لغة المصدر:</span>
-          <select id="sourceLang" class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-200">
-            <option value="eng" selected>الإنجليزية (eng)</option>
-            <option value="kor">الكوية (kor)</option>
-            <option value="jpn">اليابانية (jpn)</option>
+      <!-- تبويب 1: جلب بواسطة رابط الفصل -->
+      <div id="urlTab" class="tab-content space-y-3">
+        <label class="block text-xs font-semibold text-slate-300">ضع رابط صفحة الفصل من أي موقع مانهوا:</label>
+        <div class="flex flex-col md:flex-row gap-3">
+          <input type="url" id="chapterUrlInput" placeholder="https://example.com/manga/chapter-1..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors">
+          <button onclick="fetchChapterFromUrl()" id="fetchChapterBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+            <i data-lucide="download" class="w-4 h-4 text-indigo-400"></i>
+            <span>جلب جميع صور الفصل</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- تبويب 2: روابط متعددة -->
+      <div id="multiUrlTab" class="tab-content hidden space-y-3">
+        <label class="block text-xs font-semibold text-slate-300">ضع روابط الصور (رابط واحد في كل سطر):</label>
+        <textarea id="multiUrlsInput" rows="4" placeholder="https://site.com/image1.jpg&#10;https://site.com/image2.jpg" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 font-mono text-xs"></textarea>
+        <button onclick="loadFromMultiUrls()" class="bg-slate-800 hover:bg-slate-700 text-slate-100 font-semibold px-6 py-2.5 rounded-xl flex items-center gap-2 text-sm">
+          <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i>
+          <span>تحميل قائمة الصور</span>
+        </button>
+      </div>
+
+      <!-- تبويب 3: رفع ملفات -->
+      <div id="fileTab" class="tab-content hidden space-y-3">
+        <div class="border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 text-center transition-all bg-slate-950/50 cursor-pointer" onclick="document.getElementById('fileInput').click()">
+          <i data-lucide="image-plus" class="w-10 h-10 mx-auto mb-2 text-indigo-400"></i>
+          <p class="text-sm font-semibold text-slate-300">اضغط هنا لرفع صور الفصل المترجمة من جهازك</p>
+          <p class="text-xs text-slate-500 mt-1">يمكنك تحديد عدة صور معاً (PNG, JPG, WEBP)</p>
+          <input type="file" id="fileInput" multiple accept="image/*" class="hidden" onchange="loadFromFiles(event)">
+        </div>
+      </div>
+
+      <!-- خيارات التخصيص والمحرك -->
+      <div class="mt-4 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+        <div class="flex items-center gap-3">
+          <span class="font-medium">لغة المانهوا الأصلية:</span>
+          <select id="sourceLang" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-200">
+            <option value="eng" selected>الإنجليزية (ENG)</option>
+            <option value="kor">الكورية (KOR)</option>
+            <option value="jpn">اليابانية (JPN)</option>
           </select>
         </div>
         <div class="flex items-center gap-2">
-          <span>شغّل البروكسي عند الحاجة:</span>
           <input type="checkbox" id="useProxy" checked class="rounded border-slate-800 text-indigo-600 focus:ring-0">
+          <label for="useProxy" class="cursor-pointer">تفعيل البروكسي لتجاوز حظر الصور (CORS Proxy)</label>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="chapterCountBadge" class="bg-slate-800 text-slate-300 px-3 py-1 rounded-full text-xs font-semibold">عدد الصور: 0</span>
         </div>
       </div>
+
     </div>
 
-    <!-- شريط تقدم العمليات -->
-    <div id="statusCard" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-4">
+    <div id="statusCard" class="hidden bg-slate-900 border border-indigo-500/30 rounded-2xl p-4 shadow-xl">
       <div class="flex items-center justify-between mb-2">
-        <span id="statusText" class="text-sm font-medium text-indigo-400">جاري المعالجة...</span>
-        <span id="statusPercent" class="text-xs text-slate-400">0%</span>
+        <div class="flex items-center gap-2">
+          <div class="animate-spin rounded-full h-4 w-4 border-2 border-indigo-500 border-t-transparent"></div>
+          <span id="statusText" class="text-sm font-semibold text-indigo-300">جاري معالجة الفصل...</span>
+        </div>
+        <span id="statusPercent" class="text-xs font-bold text-slate-400">0%</span>
       </div>
-      <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden">
-        <div id="progressBar" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+      <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-800">
+        <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-cyan-400 h-full w-0 rounded-full transition-all duration-300"></div>
       </div>
     </div>
 
-    <!-- منطقة عرض الفريم والمقارنة -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
-      <!-- الفريم الأصلي -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center">
-        <h3 class="text-sm font-semibold mb-3 text-slate-400 flex items-center gap-2">
-          <i data-lucide="image" class="w-4 h-4"></i> الفريم الأصلي
-        </h3>
-        <div class="canvas-container w-full flex justify-center bg-slate-950 rounded-xl overflow-hidden p-2">
-          <img id="originalImg" src="" alt="الفريم الأصلي" class="max-h-[600px] object-contain hidden" crossorigin="anonymous">
-          <div id="originalPlaceholder" class="h-64 flex items-center justify-center text-slate-600 text-sm">
-            قم بإدخال رابط صورة واضغط "جلب وترجمة"
-          </div>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between px-2">
+        <h2 class="text-base font-bold text-slate-300 flex items-center gap-2">
+          <i data-lucide="eye" class="w-5 h-5 text-indigo-400"></i> القارئ المستمر للفصل
+        </h2>
+        <div class="flex gap-2">
+          <button onclick="toggleAllViews('translated')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">عرض المترجم للجميع</button>
+          <button onclick="toggleAllViews('original')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">عرض الأصلي للجميع</button>
         </div>
       </div>
 
-      <!-- الفريم المترجم -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center">
-        <h3 class="text-sm font-semibold mb-3 text-indigo-400 flex items-center gap-2">
-          <i data-lucide="check-circle" class="w-4 h-4"></i> الفريم المترجم (تلقائياً)
-        </h3>
-        <div class="canvas-container w-full flex justify-center bg-slate-950 rounded-xl overflow-hidden p-2 min-h-[256px]">
-          <canvas id="translatedCanvas" class="hidden"></canvas>
-          <div id="translatedPlaceholder" class="h-64 flex items-center justify-center text-slate-600 text-sm">
-            ستظهر النتيجة المترجمة هنا
-          </div>
+      <!-- قائمة الفريمات المتسلسلة (Webtoon Strip) -->
+      <div id="webtoonReader" class="max-w-3xl mx-auto space-y-4">
+        <div id="emptyReaderState" class="bg-slate-900/50 border border-dashed border-slate-800 rounded-2xl p-12 text-center text-slate-500">
+          <i data-lucide="book-open" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>
+          <p class="text-sm font-medium">لم يتم تحميل أي فصل بعد.</p>
+          <p class="text-xs mt-1">ضع رابط الفصل بالأعلى واضغط "جلب صور الفصل" للبدء بالترجمة والقراءة.</p>
         </div>
       </div>
-
     </div>
 
   </main>
 
-  <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-    جاهز للنشر الفوري على منصة Vercel بدون الحاجة لسيرفرات خارجية أو مفاتيح شحن.
-  </footer>
-
   <script>
-    // تهيئة الأيقونات
     lucide.createIcons();
 
-    // تهيئة محرك Tesseract OCR
-    let worker = null;
+    // حالة النظام وسلسلة الصور
+    let chapterImages = []; // قائمة روابط أو مصادر الصور
+    let isTranslating = false;
+    let shouldStop = false;
+    let tesseractWorker = null;
 
-    async function initTesseract(lang = 'eng') {
-      if (worker) {
-        await worker.terminate();
-      }
-      updateStatus("جاري تحضير محرك قراءة النصوص (OCR)...", 10);
-      worker = await Tesseract.createWorker(lang);
+    // التبديل بين التبويبات
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('bg-indigo-600', 'text-white');
+        el.classList.add('text-slate-400');
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+      activeBtn.classList.add('bg-indigo-600', 'text-white');
+      activeBtn.classList.remove('text-slate-400');
     }
 
-    // دالة جلب الترجمة مجاناً عبر Google Translate بدون API Key
+    // 1. جلب صور الفصل من رابط الصفحة
+    async function fetchChapterFromUrl() {
+      const chapterUrl = document.getElementById('chapterUrlInput').value.trim();
+      const useProxy = document.getElementById('useProxy').checked;
+
+      if (!chapterUrl) {
+        alert("يرجى إدخال رابط فصل صحيح أولاً.");
+        return;
+      }
+
+      updateStatus("جاري استخراج صور الفصل من الصفحة...", 15);
+
+      try {
+        // استدعاء الصفحة عبر بروكسي مجاني لقراءة HTML
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(chapterUrl)}`;
+        const response = await fetch(proxyUrl);
+        const htmlText = await response.text();
+
+        // تحليل الـ HTML واستخراج الصور
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+        
+        // البحث عن وسوم الصور داخل الحاويات المعتادة لمواقع المانهوا
+        const imgElements = doc.querySelectorAll('img');
+        let extractedUrls = [];
+
+        imgElements.forEach(img => {
+          let src = img.getAttribute('data-src') || img.getAttribute('src') || img.getAttribute('data-lazy-src');
+          if (src) {
+            src = src.trim();
+            // تصفية امتدادات الصور الشائعة للمانهوا
+            if (src.match(/\.(jpeg|jpg|png|webp)/i) || src.includes('chapter') || src.includes('page')) {
+              // إصلاح الروابط النسبية
+              if (src.startsWith('//')) src = 'https:' + src;
+              else if (src.startsWith('/')) {
+                const urlObj = new URL(chapterUrl);
+                src = urlObj.origin + src;
+              }
+              if (!extractedUrls.includes(src)) {
+                extractedUrls.push(src);
+              }
+            }
+          }
+        });
+
+        if (extractedUrls.length === 0) {
+          alert("لم نتمكن من العثور على صور تلقائياً داخل الرابط. يرجى تجربة نسَخ روابط الصور وضعها في تبويب 'روابط صور متعددة'.");
+          document.getElementById('statusCard').classList.add('hidden');
+          return;
+        }
+
+        updateStatus(`تم العثور على ${extractedUrls.length} صورة داخل الفصل!`, 100);
+        setTimeout(() => document.getElementById('statusCard').classList.add('hidden'), 2000);
+
+        loadChapterImages(extractedUrls, useProxy);
+
+      } catch (err) {
+        console.error("خطأ في جلب الفصل:", err);
+        alert("تعذر جلب الفصل تلقائياً بسبب حماية الموقع. يمكنك نسخ روابط الصور ولصقها برمز 'روابط متعددة'.");
+        document.getElementById('statusCard').classList.add('hidden');
+      }
+    }
+
+    // تحميل قائمة الصور المستخرجة بروابط نصية
+    function loadFromMultiUrls() {
+      const rawText = document.getElementById('multiUrlsInput').value.trim();
+      const useProxy = document.getElementById('useProxy').checked;
+      if (!rawText) return;
+
+      const urls = rawText.split('\n').map(u => u.trim()).filter(u => u.length > 5);
+      if (urls.length > 0) {
+        loadChapterImages(urls, useProxy);
+      }
+    }
+
+    // تحميل ملفات صور من جهاز المستخدم
+    function loadFromFiles(e) {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+
+      const fileUrls = files.map(file => URL.createObjectURL(file));
+      loadChapterImages(fileUrls, false);
+    }
+
+    // بناء واجهة القارئ العمودي للفصل
+    function loadChapterImages(urls, applyProxy = true) {
+      chapterImages = urls;
+      document.getElementById('chapterCountBadge').innerText = `عدد الصور: ${urls.length}`;
+      
+      const readerContainer = document.getElementById('webtoonReader');
+      readerContainer.innerHTML = ''; // مسح القارئ السابق
+
+      urls.forEach((url, idx) => {
+        let finalSrc = url;
+        if (applyProxy && !url.startsWith('blob:')) {
+          finalSrc = `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(url)}`;
+        }
+
+        const frameCard = document.createElement('div');
+        frameCard.className = 'webtoon-frame bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl relative group';
+        frameCard.id = `frame-card-${idx}`;
+
+        frameCard.innerHTML = `
+          <!-- شريط معلومات الصفحة والتحكم -->
+          <div class="bg-slate-950/80 backdrop-blur px-3 py-2 border-b border-slate-800 flex items-center justify-between text-xs">
+            <span class="font-bold text-indigo-400">الصفحة ${idx + 1} من ${urls.length}</span>
+            <div class="flex items-center gap-2">
+              <span id="badge-${idx}" class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">أصلي</span>
+              <button onclick="translateSinglePage(${idx})" class="bg-indigo-600/80 hover:bg-indigo-600 text-white px-2.5 py-1 rounded flex items-center gap-1 transition-all">
+                <i data-lucide="sparkles" class="w-3 h-3"></i> ترجمة هذه الصفحة
+              </button>
+            </div>
+          </div>
+
+          <!-- حاوية الصورة والـ Canvas -->
+          <div class="relative min-h-[200px] flex justify-center bg-black/40">
+            <img id="img-${idx}" src="${finalSrc}" crossorigin="anonymous" class="w-full h-auto object-contain" onload="onFrameImageLoaded(${idx})">
+            <canvas id="canvas-${idx}" class="w-full h-auto hidden absolute top-0 left-0"></canvas>
+          </div>
+        `;
+
+        readerContainer.appendChild(frameCard);
+      });
+
+      lucide.createIcons();
+      document.getElementById('batchTranslateBtn').disabled = false;
+      document.getElementById('batchTranslateBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
+    function onFrameImageLoaded(idx) {
+      console.log(`تم تحميل الفريم ${idx + 1}`);
+    }
+
+    // 2. محرك ترجمة النصوص مجاناً بواسطة Google Translate Web API
     async function translateTextFree(text, targetLang = 'ar') {
-      if (!text.trim()) return "";
+      if (!text || !text.trim()) return "";
       try {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
         const response = await fetch(url);
         const data = await response.json();
-        // تجميع قطع الترجمة المكتملة
-        let translatedResult = "";
+        let result = "";
         if (data && data[0]) {
-          data[0].forEach(item => {
-            if (item[0]) translatedResult += item[0];
+          data[0].forEach(part => {
+            if (part[0]) result += part[0];
           });
         }
-        return translatedResult || text;
+        return result || text;
       } catch (err) {
-        console.error("خطأ في جلب الترجمة المجانية:", err);
+        console.error("خطأ ترجمة:", err);
         return text;
       }
     }
 
-    // تحديث شريط الوضع والتقدم
+    // 3. دالة ترجمة صفحة واحدة بالكانفاس
+    async function processSingleFrame(idx) {
+      const img = document.getElementById(`img-${idx}`);
+      const canvas = document.getElementById(`canvas-${idx}`);
+      const badge = document.getElementById(`badge-${idx}`);
+
+      if (!img || !canvas) return;
+
+      badge.innerText = "جاري الترجمة...";
+      badge.className = "px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 animate-pulse";
+
+      // تحضير أبعاد الكانفاس برسم الصورة الأصيلة
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      ctx.drawImage(img, 0, 0);
+
+      // تهيئة محرك OCR عند الحاجة
+      const sourceLang = document.getElementById('sourceLang').value;
+      if (!tesseractWorker) {
+        tesseractWorker = await Tesseract.createWorker(sourceLang);
+      }
+
+      // قراءة النصوص
+      const { data } = await tesseractWorker.recognize(img);
+
+      if (data && data.blocks) {
+        for (const block of data.blocks) {
+          if (block.text && block.text.trim().length > 1) {
+            const bbox = block.bbox;
+            const originalText = block.text.trim();
+
+            // ترجمة الفقاعة
+            const translatedText = await translateTextFree(originalText, 'ar');
+
+            // طلاء مكان الكلمات باللون الأبيض (إخفاء النص الأصلي)
+            const padding = 6;
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(
+              bbox.x0 - padding,
+              bbox.y0 - padding,
+              (bbox.x1 - bbox.x0) + (padding * 2),
+              (bbox.y1 - bbox.y0) + (padding * 2)
+            );
+
+            // كتابة النص العربي المترجم
+            ctx.fillStyle = "#000000";
+            const fontSize = Math.max(14, Math.floor((bbox.y1 - bbox.y0) * 0.35));
+            ctx.font = `bold ${fontSize}px 'Cairo', sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            const centerX = bbox.x0 + (bbox.x1 - bbox.x0) / 2;
+            const centerY = bbox.y0 + (bbox.y1 - bbox.y0) / 2;
+
+            ctx.fillText(translatedText, centerX, centerY);
+          }
+        }
+      }
+
+      // إظهار الكانفاس المترجم
+      canvas.classList.remove('hidden');
+      badge.innerText = "مترجم";
+      badge.className = "px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold";
+    }
+
+    // ترجمة صفحة مفرودة عند الطلب
+    async function translateSinglePage(idx) {
+      updateStatus(`جاري ترجمة الصفحة ${idx + 1}...`, 50);
+      await processSingleFrame(idx);
+      document.getElementById('statusCard').classList.add('hidden');
+    }
+
+    // 4. ترجمة جميع صفحات الفصل بالكامل بالتسلسل (Batch)
+    async function translateAllPages() {
+      if (chapterImages.length === 0) return;
+
+      isTranslating = true;
+      shouldStop = false;
+
+      document.getElementById('batchTranslateBtn').classList.add('hidden');
+      document.getElementById('stopTranslateBtn').classList.remove('hidden');
+
+      for (let i = 0; i < chapterImages.length; i++) {
+        if (shouldStop) break;
+
+        const percent = Math.round(((i + 1) / chapterImages.length) * 100);
+        updateStatus(`جاري ترجمة الفصل: صفحة ${i + 1} من ${chapterImages.length}`, percent);
+
+        // التمرير التلقائي للصفحة الجاري ترجمتها
+        const frameEl = document.getElementById(`frame-card-${i}`);
+        if (frameEl) {
+          frameEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        await processSingleFrame(i);
+      }
+
+      isTranslating = false;
+      document.getElementById('batchTranslateBtn').classList.remove('hidden');
+      document.getElementById('stopTranslateBtn').classList.add('hidden');
+
+      if (!shouldStop) {
+        updateStatus("اكتملت ترجمة جميع صفحات الفصل بنجاح!", 100);
+        setTimeout(() => document.getElementById('statusCard').classList.add('hidden'), 3000);
+      }
+    }
+
+    function stopTranslation() {
+      shouldStop = true;
+      isTranslating = false;
+      document.getElementById('batchTranslateBtn').classList.remove('hidden');
+      document.getElementById('stopTranslateBtn').classList.add('hidden');
+      updateStatus("تم إيقاف الترجمة التلقائية.", 0);
+      setTimeout(() => document.getElementById('statusCard').classList.add('hidden'), 2000);
+    }
+
+    function toggleAllViews(mode) {
+      chapterImages.forEach((_, idx) => {
+        const canvas = document.getElementById(`canvas-${idx}`);
+        if (canvas) {
+          if (mode === 'translated' && !canvas.classList.contains('hidden')) {
+            canvas.style.display = 'block';
+          } else if (mode === 'original') {
+            canvas.style.display = 'none';
+          }
+        }
+      });
+    }
+
     function updateStatus(text, percent) {
       const card = document.getElementById('statusCard');
       const textEl = document.getElementById('statusText');
@@ -181,110 +487,6 @@
       textEl.innerText = text;
       percentEl.innerText = percent + '%';
       barEl.style.width = percent + '%';
-    }
-
-    // دالة المعالجة الرئيسية عند الضغط على الزر
-    async function loadAndTranslateImage() {
-      const urlInput = document.getElementById('imageUrlInput').value.trim();
-      const useProxy = document.getElementById('useProxy').checked;
-      const sourceLang = document.getElementById('sourceLang').value;
-      const translateBtn = document.getElementById('translateBtn');
-
-      if (!urlInput) {
-        alert("يرجى وضع رابط صورة صحيح أولاً.");
-        return;
-      }
-
-      // بناء رابط الصورة مع أو بدون بروكسي لتفادي حظر الصور (CORS)
-      let finalImgUrl = urlInput;
-      if (useProxy) {
-        finalImgUrl = `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(urlInput)}`;
-      }
-
-      try {
-        translateBtn.disabled = true;
-        translateBtn.classList.add('opacity-50');
-        updateStatus("جاري تحميل الصورة...", 20);
-
-        // تحميل الصورة في عنصر الإيميج
-        const img = document.getElementById('originalImg');
-        img.crossOrigin = "anonymous";
-        img.src = finalImgUrl;
-
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = () => reject(new Error("فشل تحميل الصورة. حاول إيقاف/تفعيل خيار البروكسي."));
-        });
-
-        document.getElementById('originalPlaceholder').classList.add('hidden');
-        img.classList.remove('hidden');
-
-        // تجهيز الـ Canvas للترجمة
-        const canvas = document.getElementById('translatedCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-
-        // رسم الصورة الأصلية في الكانفاس أولاً
-        ctx.drawImage(img, 0, 0);
-        document.getElementById('translatedPlaceholder').classList.add('hidden');
-        canvas.classList.remove('hidden');
-
-        // 1. تشغيل OCR لاستخراج النصوص ومواقعها
-        updateStatus("جاري تحليل النصوص داخل الصورة (OCR)...", 40);
-        await initTesseract(sourceLang);
-        
-        const { data } = await worker.recognize(img);
-        updateStatus("تم التعرف على النصوص، جاري الترجمة واستبدال الفقاعات...", 70);
-
-        // 2. معالجة كل كلمة أو كتل نصوص تم اكتشافها
-        if (data && data.blocks) {
-          for (const block of data.blocks) {
-            if (block.text.trim().length > 1) {
-              const bbox = block.bbox;
-              const originalText = block.text.trim();
-
-              // الحصول على الترجمة العربية مجاناً
-              const translatedText = await translateTextFree(originalText, 'ar');
-
-              // 3. مسح النص القديم من الصورة (طلاء خلفية بيضاء مكان النص الأصلي)
-              const padding = 6;
-              ctx.fillStyle = "#ffffff";
-              ctx.fillRect(
-                bbox.x0 - padding, 
-                bbox.y0 - padding, 
-                (bbox.x1 - bbox.x0) + (padding * 2), 
-                (bbox.y1 - bbox.y0) + (padding * 2)
-              );
-
-              // 4. إدراج النص العربي المترجم داخل نفس الإطار
-              ctx.fillStyle = "#000000";
-              const fontSize = Math.max(14, Math.floor((bbox.y1 - bbox.y0) * 0.35));
-              ctx.font = `bold ${fontSize}px 'Cairo', sans-serif`;
-              ctx.textAlign = "center";
-              ctx.textBaseline = "middle";
-
-              // حساب مركز الفقاعة
-              const centerX = bbox.x0 + (bbox.x1 - bbox.x0) / 2;
-              const centerY = bbox.y0 + (bbox.y1 - bbox.y0) / 2;
-
-              ctx.fillText(translatedText, centerX, centerY);
-            }
-          }
-        }
-
-        updateStatus("اكتملت الترجمة بنجاح!", 100);
-        setTimeout(() => {
-          document.getElementById('statusCard').classList.add('hidden');
-        }, 3000);
-
-      } catch (err) {
-        alert(err.message || "حدث خطأ غير متوقع أثناء معالجة الصورة.");
-        document.getElementById('statusCard').classList.add('hidden');
-      } finally {
-        translateBtn.disabled = false;
-        translateBtn.classList.remove('opacity-50');
-      }
     }
   </script>
 </body>
