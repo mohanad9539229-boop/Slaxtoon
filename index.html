@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SLAX Manhwa - المنصة الاحترافية للمانهوا</title>
+    <title>SlaxToon - منصتك لتصفح المانهوا</title>
     
     <!-- 🍎 إعدادات تطبيق الآيفون (iOS PWA) 🍎 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SLAX Manhwa">
+    <meta name="apple-mobile-web-app-title" content="SlaxToon">
     <meta name="theme-color" content="#0b0304">
     <meta name="mobile-web-app-capable" content="yes">
 
@@ -418,148 +418,28 @@
         .status-option { flex: 1; text-align: center; padding: 6px 4px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; color: var(--text-dim); }
         .status-option.active { background: var(--accent-dark); color: #fff; font-weight: bold; }
 
-        /* 🌐 زر تفعيل العرض داخل الموقع 🌐 */
-        .view-mode-toggle-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
-            padding: 8px 12px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 1rem;
-        }
-
-        .view-mode-label {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
-        }
-
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #333; transition: .3s; border-radius: 24px;
-            border: 1px solid var(--border-color);
-        }
-
-        .slider:before {
-            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
-            background-color: white; transition: .3s; border-radius: 50%;
-        }
-
-        input:checked + .slider { background-color: var(--accent-color); }
-        input:checked + .slider:before { transform: translateX(20px); }
-
-        /* 🖥️ شاشة القارئ المتقدمة داخل الموقع (Advanced In-Site Viewer Engine) 🖥️ */
-        .dedicated-viewer-screen {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: #0b0304; z-index: 1000000;
-            display: none; flex-direction: column; overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .dedicated-viewer-screen.active { display: flex; }
-
-        .viewer-top-bar {
-            min-height: 55px; background: #120406; border-bottom: 1px solid var(--border-color);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0.4rem 0.8rem; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-            z-index: 10; flex-wrap: wrap;
-        }
-
-        .viewer-bar-left, .viewer-bar-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-
-        .viewer-title-info {
-            font-size: 0.85rem; font-weight: bold; color: #fff;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
-        }
-
-        @media (min-width: 768px) {
-            .viewer-title-info { max-width: 380px; }
-        }
-
-        .viewer-canvas {
-            flex-grow: 1; width: 100%; height: calc(100vh - 55px); position: relative; background: #000; overflow: hidden;
-        }
-
-        .viewer-frame {
-            width: 100%; height: 100%; border: none; background: #fff; transition: filter 0.3s ease;
-        }
-
-        /* الفلتر الليلي للقارئ */
-        .viewer-night-filter {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.45); pointer-events: none; z-index: 4;
-            display: none; mix-blend-mode: multiply;
-        }
-        .viewer-night-filter.active { display: block; }
-
-        /* مؤشر التحميل */
-        .viewer-loading-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 3, 4, 0.94); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 14px; color: #fff;
-            z-index: 5; transition: opacity 0.3s;
-        }
-
-        .viewer-loading-overlay.hidden { opacity: 0; pointer-events: none; }
-
-        /* واجهة التنبيه عند حظر الترجمة أو الإطار (Blocked Overlay) */
-        .viewer-blocked-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 3, 4, 0.96); backdrop-filter: blur(8px);
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            padding: 1.5rem; text-align: center; color: #fff; z-index: 6; gap: 12px;
-        }
-        .viewer-blocked-overlay.active { display: flex; }
-        .viewer-blocked-card {
-            background: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: var(--radius-md); padding: 1.5rem; max-width: 480px; width: 100%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 12px;
-        }
-
-        /* أدوات التمرير التلقائي السريعة */
-        .viewer-controls-floater {
-            position: absolute; bottom: 20px; right: 20px; z-index: 8;
-            display: flex; flex-direction: column; gap: 8px; background: rgba(18, 4, 6, 0.85);
-            backdrop-filter: blur(6px); border: 1px solid var(--border-color);
-            padding: 8px; border-radius: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-        }
-
-        .viewer-float-btn {
-            width: 38px; height: 38px; border-radius: 50%; border: none;
-            background: rgba(255,255,255,0.08); color: #fff; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-        .viewer-float-btn:hover { background: var(--accent-color); transform: scale(1.1); }
-        .viewer-float-btn.active { background: var(--accent-color); box-shadow: 0 0 12px var(--accent-color); }
-
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background-color: var(--accent-color); color: #fff; padding: 0.8rem 1.8rem; border-radius: 30px; font-size: 0.9rem; font-weight: bold; box-shadow: 0 8px 25px rgba(229,9,20,0.5); transition: transform 0.3s; z-index: 100000; }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; color: var(--text-dim); }
         #importFileInput { display: none; }
+
+        /* إمكانية وصول: مؤشر تركيز واضح عند التنقل بلوحة المفاتيح */
+        a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, .card:focus-visible, .tag-btn:focus-visible {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
     </style>
 </head>
 <body>
 
     <header>
         <div class="header-content">
-            <h1>SLAX <span>MANHWA</span> <i class="fa-solid fa-fire-flame-curved" style="font-size: 1.8rem;"></i></h1>
-            <p class="sub">تصفح وقراءة المانهوا الكورية مع نظام فلترة شامل وقارئ داخلي محسّن</p>
+            <h1>Slax<span>Toon</span> <i class="fa-solid fa-fire-flame-curved" style="font-size: 1.8rem;"></i></h1>
+            <p class="sub">اكتشف وتابع المانهوا الكورية مع نظام فلترة شامل، ثم اقرأ من مصدرك المفضل مباشرة</p>
         </div>
     </header>
 
@@ -606,6 +486,14 @@
                     <option value="PLANNING">أخطط لقراءتها 📌</option>
                     <option value="COMPLETED">مكتملة ✅</option>
                 </select>
+
+                <select id="sortSelect" onchange="fetchUniqueManhwa(true)">
+                    <option value="POPULARITY_DESC">الأكثر شعبية 🔥</option>
+                    <option value="TRENDING_DESC">الأكثر تداولاً 📈</option>
+                    <option value="SCORE_DESC">الأعلى تقييماً ⭐</option>
+                    <option value="FAVOURITES_DESC">الأكثر إعجاباً ❤️</option>
+                    <option value="TITLE_ROMAJI">الاسم (أ-ي) 🔤</option>
+                </select>
             </div>
 
             <div class="genre-tags-bar">
@@ -619,7 +507,7 @@
 
             <div class="action-buttons">
                 <div class="btn-group-left">
-                    <button class="btn" id="loadBtn" onclick="fetchUniqueManhwa()"><i class="fa-solid fa-rotate"></i> جلب 50 عشوائي</button>
+                    <button class="btn" id="loadBtn" onclick="fetchUniqueManhwa(true)"><i class="fa-solid fa-rotate"></i> تحديث القائمة</button>
                     <button class="btn btn-wheel" onclick="openWheelModal()"><i class="fa-solid fa-dharmachakra"></i> عجلة الحظ 🎡</button>
                     <button class="btn btn-random" onclick="pickRandomManhwa()"><i class="fa-solid fa-dice"></i> اقتراح عشوائي</button>
                     <button class="btn btn-tab" id="favTabBtn" onclick="toggleFavView()"><i class="fa-solid fa-heart" style="color: #e50914;"></i> المفضلة (<span id="favCount">0</span>)</button>
@@ -647,6 +535,12 @@
 
         <div class="grid" id="manhwaGrid"></div>
 
+        <div style="text-align:center; margin: 1.8rem 0 2.5rem;">
+            <button class="btn btn-outline" id="loadMoreBtn" onclick="fetchUniqueManhwa(false)" style="display:none; padding: 0.85rem 2.2rem;">
+                <i class="fa-solid fa-chevron-down"></i> تحميل المزيد
+            </button>
+        </div>
+
     </div>
 
     <!-- مشغل الموسيقى -->
@@ -655,7 +549,7 @@
     <div class="spotify-widget" id="spotifyWidget">
         <div class="spotify-header">
             <span><i class="fa-brands fa-spotify"></i> مشغل يوتيوب & المفضلة</span>
-            <button class="spotify-close" onclick="toggleSpotifyWidget()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="spotify-close" onclick="toggleSpotifyWidget()" aria-label="إغلاق مشغل الموسيقى"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <div class="spotify-input-group">
@@ -693,7 +587,7 @@
     <!-- Modal التفاصيل -->
     <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
         <div class="modal" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close" onclick="closeModal()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
             
             <div class="modal-header">
                 <img id="modalImg" src="" alt="Cover">
@@ -709,17 +603,6 @@
                 </div>
             </div>
 
-            <!-- 🌐 خيار نظام العرض 🌐 -->
-            <div class="view-mode-toggle-box">
-                <div class="view-mode-label">
-                    <i class="fa-solid fa-window-maximize" style="color:var(--accent-color);"></i>
-                    <span>العرض داخل الموقع (In-Site Viewer)</span>
-                </div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="inSiteViewToggle" onchange="toggleInSiteViewSetting(this.checked)">
-                    <span class="slider"></span>
-                </label>
-            </div>
 
             <div class="status-selector">
                 <div class="status-option" id="st-none" onclick="setUserStatus('NONE')">غير محدد</div>
@@ -760,81 +643,10 @@
         </div>
     </div>
 
-    <!-- 🖥️ صفحة القارئ الاحترافية داخل الموقع (Advanced Viewer System) 🖥️ -->
-    <div class="dedicated-viewer-screen" id="dedicatedViewerScreen">
-        <div class="viewer-top-bar">
-            <div class="viewer-bar-left">
-                <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="closeDedicatedViewer()">
-                    <i class="fa-solid fa-arrow-right"></i> رجوع
-                </button>
-                <button class="btn btn-outline" title="إعادة تحميل" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" onclick="reloadViewerPage()">
-                    <i class="fa-solid fa-rotate-right"></i>
-                </button>
-                <button class="btn btn-outline" title="حفظ العلامة" style="padding: 0.4rem 0.7rem; font-size: 0.8rem; color:#f59e0b;" onclick="saveViewerBookmark()">
-                    <i class="fa-solid fa-bookmark"></i>
-                </button>
-                <div class="viewer-title-info" id="viewerTitleInfo">اسم المانهوا - المصدر</div>
-            </div>
-            
-            <div class="viewer-bar-right">
-                <button class="btn btn-translate" id="viewerTranslateBtn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="translateViewerPage()">
-                    <i class="fa-solid fa-language"></i> ترجمة الصفحة
-                </button>
-                <button class="btn btn-outline" title="وضع الليل للعين" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" onclick="toggleViewerNightMode()">
-                    <i class="fa-solid fa-moon"></i>
-                </button>
-                <button class="btn btn-outline" title="ملء الشاشة" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" onclick="toggleViewerFullscreen()">
-                    <i class="fa-solid fa-expand"></i>
-                </button>
-                <button class="btn btn-outline" title="نسخ الرابط" style="padding: 0.4rem 0.7rem; font-size: 0.8rem;" onclick="copyViewerLink()">
-                    <i class="fa-solid fa-link"></i>
-                </button>
-                <button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;" onclick="openViewerExternal()">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> فتح خارجي
-                </button>
-            </div>
-        </div>
-
-        <div class="viewer-canvas" id="viewerCanvas">
-            <!-- فلتر القراءة الليلي -->
-            <div class="viewer-night-filter" id="viewerNightOverlay"></div>
-
-            <!-- مؤشر التحميل -->
-            <div class="viewer-loading-overlay" id="viewerLoadingOverlay">
-                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2.2rem; color: var(--accent-color);"></i>
-                <span style="font-size: 0.9rem; font-weight: bold;" id="viewerLoadingText">جاري تحميل المصدر داخل القارئ...</span>
-            </div>
-
-            <!-- تنبيه حظر العرض/الترجمة (يمنع الشاشة البيضاء!) -->
-            <div class="viewer-blocked-overlay" id="viewerBlockedOverlay">
-                <div class="viewer-blocked-card">
-                    <i class="fa-solid fa-shield-halved" style="font-size: 2.5rem; color: var(--accent-color);"></i>
-                    <h3 style="font-size: 1.1rem; color: #fff;">تم تقييد عرض الصفحة/الترجمة داخل الإطار</h3>
-                    <p style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.6;">
-                        هذا الموقع أو سيرفر الترجمة يفرض حماية أمنية (X-Frame-Options) تمنع عرضه كإطار داخلي. يمكنك فتحه فوراً في تبويب جديد أو العودة للأصل.
-                    </p>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px;">
-                        <button class="btn" style="flex:1;" onclick="openTranslatedTabDirect()"><i class="fa-solid fa-arrow-up-right-from-square"></i> فتح الترجمة بالمتصفح</button>
-                        <button class="btn btn-outline" style="flex:1;" onclick="restoreViewerOriginal()"><i class="fa-solid fa-undo"></i> العودة للأصل</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- أدوات التحكم بالتمرير العائمة -->
-            <div class="viewer-controls-floater">
-                <button class="viewer-float-btn" onclick="scrollViewer('top')" title="لأعلى الصفحة"><i class="fa-solid fa-arrow-up"></i></button>
-                <button class="viewer-float-btn" id="autoScrollBtn" onclick="toggleViewerAutoScroll()" title="تمرير تلقائي"><i class="fa-solid fa-angles-down"></i></button>
-                <button class="viewer-float-btn" onclick="scrollViewer('bottom')" title="لأسفل الصفحة"><i class="fa-solid fa-arrow-down"></i></button>
-            </div>
-
-            <iframe id="dedicatedIframe" class="viewer-frame" src="" allowfullscreen onload="onViewerIframeLoad()" onerror="handleViewerIframeError()"></iframe>
-        </div>
-    </div>
-
     <!-- 🎡 Modal عجلة الحظ 🎡 -->
     <div class="modal-overlay" id="wheelModalOverlay" onclick="closeWheelModal()">
         <div class="modal" onclick="event.stopPropagation()" style="text-align: center; padding: 1.5rem;">
-            <button class="modal-close" onclick="closeWheelModal()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close" onclick="closeWheelModal()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
             <h3 style="color:#fff; margin-bottom:0.5rem;"><i class="fa-solid fa-dharmachakra" style="color:var(--accent-color);"></i> عجلة الحظ الدوارة</h3>
             <p style="font-size:0.8rem; color:var(--text-dim);">أدر العجلة ليتم اختيار مانهوا ممتازة لك تلقائياً!</p>
             
@@ -851,7 +663,7 @@
     <!-- Modal الإحصائيات -->
     <div class="modal-overlay" id="statsModalOverlay" onclick="closeStatsModal()">
         <div class="modal" id="statsModalCard" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeStatsModal()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close" onclick="closeStatsModal()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
             <h3 style="color:#fff; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-pie" style="color:var(--accent-color);"></i> إحصائيات مكتبتك والمفضلة</h3>
             <div class="stats-grid">
                 <div class="stat-card"><div class="num" id="statFavCount">0</div><div class="label">مانهوا بالمفضلة</div></div>
@@ -868,7 +680,7 @@
     <!-- Modal تثبيت iOS -->
     <div class="modal-overlay" id="iosModalOverlay" onclick="closeIosModal()">
         <div class="modal" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeIosModal()"><i class="fa-solid fa-xmark"></i></button>
+            <button class="modal-close" onclick="closeIosModal()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
             <h3 style="color:#fff; margin-bottom:0.5rem;"><i class="fa-brands fa-apple" style="color:var(--accent-color);"></i> تثبيت الموقع كتطبيق آيفون</h3>
             <div class="ios-guide-box">
                 <ol>
@@ -886,6 +698,11 @@
 
     <script>
         const blockedGenres = ["Boys Love", "Ecchi", "Hentai", "Yaoi", "Erotica", "Shounen Ai", "Yuri", "Shoujo Ai"];
+
+        // غلاف احتياطي محلي (SVG) يُستخدم عند تعذر تحميل صورة الغلاف الأصلية
+        const FALLBACK_COVER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="250"><rect width="100%" height="100%" fill="#160709"/><text x="50%" y="50%" fill="#b8a0a2" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">لا يوجد غلاف</text></svg>'
+        );
         const initialExcluded = [136331, 137304, 117540, 130870, 97897, 115000, 151025, 103156, 137595, 119276];
 
         // 🎵 الأغاني الأربعة الافتراضية المضمنة 🎵
@@ -903,7 +720,6 @@
         let recentViews = JSON.parse(localStorage.getItem('slax_recent_views')) || [];
         let userNotes = JSON.parse(localStorage.getItem('slax_user_notes')) || {};
         let savedTheme = localStorage.getItem('slax_theme') || 'default';
-        let useInSiteView = JSON.parse(localStorage.getItem('slax_insite_view')) ?? true;
 
         let musicPlaylist = [...storedMusic];
         defaultMusicPlaylist.forEach(defSong => {
@@ -914,6 +730,7 @@
 
         let excludedSet = new Set([...initialExcluded, ...savedExclusions]);
         let currentFetchedList = [];
+        let currentPage = 1;
         let activeItem = null;
         let originalDescText = "";
         let isTranslated = false;
@@ -929,27 +746,9 @@
         let isSpinning = false;
         let wheelItems = [];
 
-        // متغيرات القارئ المتقدم (Dedicated Viewer)
-        let currentViewerUrl = "";
-        let isViewerPageTranslated = false;
-        let autoScrollInterval = null;
-        let isAutoScrolling = false;
-        let viewerTimeoutTimer = null;
-
         if (savedTheme !== 'default') {
             document.body.className = `theme-${savedTheme}`;
             document.getElementById('themeSelector').value = savedTheme;
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const toggle = document.getElementById('inSiteViewToggle');
-            if(toggle) toggle.checked = useInSiteView;
-        });
-
-        function toggleInSiteViewSetting(enabled) {
-            useInSiteView = enabled;
-            localStorage.setItem('slax_insite_view', JSON.stringify(enabled));
-            showToast(enabled ? "تم تفعيل العرض داخل الموقع 🌐" : "تم التغيير للفتح في تبويب خارجي ↗️");
         }
 
         function changeTheme(themeName) {
@@ -1160,6 +959,7 @@
                 currentFetchedList = cleanList;
                 showingFavs = false;
                 document.getElementById('favTabBtn').classList.remove('active');
+                document.getElementById('loadMoreBtn').style.display = 'none';
                 renderCards(cleanList);
                 showToast(`تم العثور على ${cleanList.length} نتيجة!`);
             } catch (err) {
@@ -1167,19 +967,28 @@
             }
         }
 
-        async function fetchUniqueManhwa() {
+        async function fetchUniqueManhwa(reset = true) {
             if (showingFavs) toggleFavView();
-            
-            const btn = document.getElementById('loadBtn');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الجلب...`;
-            btn.disabled = true;
 
-            showSkeletons();
+            const btn = document.getElementById('loadBtn');
+            const moreBtn = document.getElementById('loadMoreBtn');
+            const sortValue = document.getElementById('sortSelect').value;
+
+            if (reset) {
+                currentPage = 1;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الجلب...`;
+                btn.disabled = true;
+                showSkeletons();
+            } else {
+                currentPage += 1;
+                moreBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...`;
+                moreBtn.disabled = true;
+            }
 
             const query = `
-            query GetMassiveManhwa($page: Int, $perPage: Int, $excluded: [Int]) {
+            query GetMassiveManhwa($page: Int, $perPage: Int, $excluded: [Int], $sort: [MediaSort]) {
               Page(page: $page, perPage: $perPage) {
-                media(type: MANGA, countryOfOrigin: "KR", sort: POPULARITY_DESC, id_not_in: $excluded, isAdult: false, genre_not_in: ["Boys Love", "Ecchi"]) {
+                media(type: MANGA, countryOfOrigin: "KR", sort: $sort, id_not_in: $excluded, isAdult: false, genre_not_in: ["Boys Love", "Ecchi"]) {
                   id isAdult status format title { english romaji } coverImage { large } averageScore genres description
                 }
               }
@@ -1189,23 +998,30 @@
                 const response = await fetch('https://graphql.anilist.co', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query, variables: { page: 1, perPage: 50, excluded: Array.from(excludedSet) } })
+                    body: JSON.stringify({ query, variables: { page: currentPage, perPage: 30, excluded: Array.from(excludedSet), sort: [sortValue] } })
                 });
 
                 const result = await response.json();
                 if (!result.data || !result.data.Page || !result.data.Page.media) throw new Error("API Error");
 
                 const cleanList = result.data.Page.media.filter(isClean);
-                currentFetchedList = cleanList;
+                currentFetchedList = reset ? cleanList : currentFetchedList.concat(cleanList);
                 applyFilters();
                 cleanList.forEach(item => excludedSet.add(item.id));
                 updateUIBadges();
 
-                btn.innerHTML = `<i class="fa-solid fa-rotate"></i> جلب 50 عشوائي`;
+                moreBtn.style.display = cleanList.length > 0 ? 'inline-flex' : 'none';
+                moreBtn.innerHTML = `<i class="fa-solid fa-chevron-down"></i> تحميل المزيد`;
+                moreBtn.disabled = false;
+
+                btn.innerHTML = `<i class="fa-solid fa-rotate"></i> تحديث القائمة`;
                 btn.disabled = false;
             } catch (err) {
                 btn.innerHTML = `حاول مجدداً`;
                 btn.disabled = false;
+                moreBtn.innerHTML = `<i class="fa-solid fa-chevron-down"></i> حاول مجدداً`;
+                moreBtn.disabled = false;
+                showToast("تعذر جلب البيانات، تحقق من الاتصال!");
             }
         }
 
@@ -1240,15 +1056,19 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.setAttribute('data-id', item.id);
+                card.setAttribute('tabindex', '0');
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `عرض تفاصيل ${title}`);
                 card.onclick = () => openModal(item);
+                card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(item); } };
 
                 card.innerHTML = `
                     ${isTrending ? '<span class="trending-badge">🔥 تريند</span>' : ''}
-                    <button class="fav-btn-icon ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav(${item.id})">
+                    <button class="fav-btn-icon ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); toggleFav(${item.id})" aria-label="${isFav ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}">
                         <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart"></i>
                     </button>
                     <div class="card-img-wrap">
-                        <img src="${item.coverImage.large}" alt="${title}" loading="lazy" onerror="this.src='https://via.placeholder.com/180x250?text=No+Cover'">
+                        <img src="${item.coverImage.large}" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_COVER}'">
                         <span class="status-tag ${statusClass}">${item.status === 'RELEASING' ? 'مستمر' : (item.status === 'FINISHED' ? 'مكتمل' : 'متوقف')}</span>
                     </div>
                     <div class="card-info">
@@ -1290,6 +1110,7 @@
         function toggleFavView() {
             showingFavs = !showingFavs;
             document.getElementById('favTabBtn').classList.toggle('active', showingFavs);
+            document.getElementById('loadMoreBtn').style.display = showingFavs ? 'none' : (currentFetchedList.length > 0 ? 'inline-flex' : 'none');
             applyFilters();
         }
 
@@ -1356,7 +1177,7 @@
             html2canvas(card).then(canvas => {
                 const a = document.createElement('a');
                 a.href = canvas.toDataURL('image/png');
-                a.download = 'slax_favorites_poster.png';
+                a.download = 'slaxtoon_favorites_poster.png';
                 a.click();
                 showToast("تم تنزيل الصورة بنجاح! 📸");
             });
@@ -1387,7 +1208,7 @@
             document.getElementById('viewportContent').innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
             
             document.getElementById('trackName').innerText = "مقطع YouTube نشط";
-            document.getElementById('trackArtist').innerText = "SLAX Background Audio";
+            document.getElementById('trackArtist').innerText = "SlaxToon Background Audio";
             document.getElementById('albumArt').innerHTML = `<img src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" alt="Art">`;
             
             isMusicPlaying = true;
@@ -1431,7 +1252,7 @@
                 div.className = 'playlist-item';
                 div.innerHTML = `
                     <span class="playlist-item-title" onclick="playMusicFromFav('${item.url}')"><i class="fa-solid fa-play" style="color:var(--green-color); margin-left:5px;"></i> ${item.name}</span>
-                    <button class="playlist-del-btn" onclick="deleteFavMusic(${item.id})"><i class="fa-solid fa-trash"></i></button>
+                    <button class="playlist-del-btn" onclick="deleteFavMusic(${item.id})" aria-label="حذف من قائمة التشغيل"><i class="fa-solid fa-trash"></i></button>
                 `;
                 pl.appendChild(div);
             });
@@ -1460,7 +1281,7 @@
             }
         }
 
-        // 🌐 التعامل مع مصادر المانهوا 🌐
+        // 🌐 التعامل مع مصادر القراءة: يفتح موقع المصدر في تبويب خارجي دائماً 🌐
         function handleSourceClick(baseUrl, sourceName) {
             if (!activeItem) return;
             const title = activeItem.title.english || activeItem.title.romaji;
@@ -1472,223 +1293,8 @@
                 fullUrl = baseUrl + encodeURIComponent(title);
             }
 
-            if (useInSiteView) {
-                openDedicatedViewer(fullUrl, `${sourceName} - ${title}`);
-            } else {
-                window.open(fullUrl, '_blank');
-            }
-        }
-
-        /* 🖥️ المحرك الاحترافي الجديد للقارئ الداخلي (Dedicated Viewer Engine) 🖥️ */
-        function openDedicatedViewer(url, titleInfo) {
-            currentViewerUrl = url;
-            isViewerPageTranslated = false;
-            
-            document.getElementById('viewerTitleInfo').innerText = titleInfo;
-            document.getElementById('viewerTranslateBtn').innerHTML = `<i class="fa-solid fa-language"></i> ترجمة الصفحة`;
-            
-            document.getElementById('viewerBlockedOverlay').classList.remove('active');
-            
-            const overlay = document.getElementById('viewerLoadingOverlay');
-            document.getElementById('viewerLoadingText').innerText = "جاري تحميل المصدر داخل القارئ...";
-            if(overlay) overlay.classList.remove('hidden');
-
-            const iframe = document.getElementById('dedicatedIframe');
-            iframe.src = url;
-
-            document.getElementById('dedicatedViewerScreen').classList.add('active');
-            closeModal();
-            showToast("جاري فتح المصدر... 🌐");
-
-            // إعداد مؤقت حماية لمنع احتجاز المستخدم في شاشة تحميل معلقة أو بيضاء
-            if(viewerTimeoutTimer) clearTimeout(viewerTimeoutTimer);
-            viewerTimeoutTimer = setTimeout(() => {
-                if(overlay && !overlay.classList.contains('hidden')) {
-                    // إذا استغرق التحميل أكثر من 12 ثوانٍ قد يكون الموقع حظر العرض في الإطار
-                    showViewerBlockedNotice();
-                }
-            }, 12000);
-        }
-
-        function onViewerIframeLoad() {
-            if(viewerTimeoutTimer) clearTimeout(viewerTimeoutTimer);
-            const overlay = document.getElementById('viewerLoadingOverlay');
-            if(overlay) overlay.classList.add('hidden');
-        }
-
-        function handleViewerIframeError() {
-            showViewerBlockedNotice();
-        }
-
-        function showViewerBlockedNotice() {
-            const overlay = document.getElementById('viewerLoadingOverlay');
-            if(overlay) overlay.classList.add('hidden');
-            document.getElementById('viewerBlockedOverlay').classList.add('active');
-        }
-
-        function reloadViewerPage() {
-            const iframe = document.getElementById('dedicatedIframe');
-            if(iframe && currentViewerUrl) {
-                document.getElementById('viewerBlockedOverlay').classList.remove('active');
-                document.getElementById('viewerLoadingOverlay').classList.remove('hidden');
-                iframe.src = isViewerPageTranslated ? 
-                    `https://translate.google.com/translate?sl=auto&tl=ar&u=${encodeURIComponent(currentViewerUrl)}` : 
-                    currentViewerUrl;
-                showToast("جاري إعادة تحديث الصفحة... 🔄");
-            }
-        }
-
-        function copyViewerLink() {
-            if (currentViewerUrl) {
-                navigator.clipboard.writeText(currentViewerUrl).then(() => showToast("تم نسخ رابط الصفحة بنجاح! 📋"));
-            }
-        }
-
-        function closeDedicatedViewer() {
-            stopViewerAutoScroll();
-            const screen = document.getElementById('dedicatedViewerScreen');
-            screen.classList.remove('active');
-            document.getElementById('dedicatedIframe').src = "";
-            if (activeItem) {
-                document.getElementById('modalOverlay').classList.add('active');
-            }
-        }
-
-        function openViewerExternal() {
-            if (currentViewerUrl) {
-                window.open(currentViewerUrl, '_blank');
-            }
-        }
-
-        /* 🔤 إصلاح حظر ترجمة القارئ الذكي لحماية الصفحة من الشاشة البيضاء 🔤 */
-        function translateViewerPage() {
-            const btn = document.getElementById('viewerTranslateBtn');
-            const iframe = document.getElementById('dedicatedIframe');
-
-            if (!currentViewerUrl) return;
-
-            if (isViewerPageTranslated) {
-                // العودة للأصل
-                restoreViewerOriginal();
-            } else {
-                // ترجمة عبر خادم جوجل الترجمي
-                document.getElementById('viewerBlockedOverlay').classList.remove('active');
-                document.getElementById('viewerLoadingOverlay').classList.remove('hidden');
-                document.getElementById('viewerLoadingText').innerText = "جاري تفعيل محرك الترجمة الفورية...";
-
-                const translatedProxyUrl = `https://translate.google.com/translate?sl=auto&tl=ar&u=${encodeURIComponent(currentViewerUrl)}`;
-                iframe.src = translatedProxyUrl;
-                btn.innerHTML = `<i class="fa-solid fa-undo"></i> اللغة الأصلية`;
-                isViewerPageTranslated = true;
-                showToast("جاري ترجمة الصفحة إلى العربية... 🔤");
-
-                // كاشف حظر إطار جوجل لترجمة المواقع (ينقذ الشاشة من البيضاء!)
-                if(viewerTimeoutTimer) clearTimeout(viewerTimeoutTimer);
-                viewerTimeoutTimer = setTimeout(() => {
-                    const overlay = document.getElementById('viewerLoadingOverlay');
-                    if(overlay && !overlay.classList.contains('hidden')) {
-                        // إذا تم منع الإطار بواسطة جوجل
-                        showViewerBlockedNotice();
-                    }
-                }, 7000);
-            }
-        }
-
-        function restoreViewerOriginal() {
-            const btn = document.getElementById('viewerTranslateBtn');
-            const iframe = document.getElementById('dedicatedIframe');
-            document.getElementById('viewerBlockedOverlay').classList.remove('active');
-            iframe.src = currentViewerUrl;
-            btn.innerHTML = `<i class="fa-solid fa-language"></i> ترجمة الصفحة`;
-            isViewerPageTranslated = false;
-            showToast("تمت العودة للغة الأصلية");
-        }
-
-        function openTranslatedTabDirect() {
-            if (currentViewerUrl) {
-                const translatedProxyUrl = `https://translate.google.com/translate?sl=auto&tl=ar&u=${encodeURIComponent(currentViewerUrl)}`;
-                window.open(translatedProxyUrl, '_blank');
-                showToast("تم فتح صفحة الترجمة الفورية في تبويب جديد! 🌐");
-            }
-        }
-
-        /* 🌙 والوظائف الجديدة للقارئ (الوضع الليلي والتمرير التلقائي) 🌙 */
-        function toggleViewerNightMode() {
-            const nightOverlay = document.getElementById('viewerNightOverlay');
-            nightOverlay.classList.toggle('active');
-            const isActive = nightOverlay.classList.contains('active');
-            showToast(isActive ? "تم تفعيل فلتر الليل لحماية العين 🌙" : "تم إلغاء فلتر الليل ☀️");
-        }
-
-        function toggleViewerFullscreen() {
-            const screen = document.getElementById('dedicatedViewerScreen');
-            if (!document.fullscreenElement) {
-                screen.requestFullscreen().catch(err => {
-                    showToast("وضع ملء الشاشة مدعوم بالكامل في الأجهزة المحدثة");
-                });
-            } else {
-                document.exitFullscreen();
-            }
-        }
-
-        function saveViewerBookmark() {
-            if (!activeItem) return;
-            const title = activeItem.title.english || activeItem.title.romaji;
-            localStorage.setItem('slax_last_bookmark', JSON.stringify({
-                id: activeItem.id,
-                title: title,
-                url: currentViewerUrl,
-                date: new Date().toLocaleDateString('ar-EG')
-            }));
-            showToast("تم حفظ علامة القراءة الحالية بنجاح! 📌");
-        }
-
-        function toggleViewerAutoScroll() {
-            const btn = document.getElementById('autoScrollBtn');
-            if (isAutoScrolling) {
-                stopViewerAutoScroll();
-            } else {
-                startViewerAutoScroll();
-            }
-        }
-
-        function startViewerAutoScroll() {
-            const iframe = document.getElementById('dedicatedIframe');
-            isAutoScrolling = true;
-            document.getElementById('autoScrollBtn').classList.add('active');
-            showToast("تم بدء التمرير التلقائي 📜");
-
-            autoScrollInterval = setInterval(() => {
-                try {
-                    if (iframe.contentWindow) {
-                        iframe.contentWindow.scrollBy(0, 3);
-                    }
-                } catch(e) {
-                    // إذا واجه حماية cross-origin يقوم بالتحريك على الحاوية
-                    document.getElementById('viewerCanvas').scrollBy(0, 3);
-                }
-            }, 40);
-        }
-
-        function stopViewerAutoScroll() {
-            if (autoScrollInterval) clearInterval(autoScrollInterval);
-            isAutoScrolling = false;
-            const btn = document.getElementById('autoScrollBtn');
-            if(btn) btn.classList.remove('active');
-        }
-
-        function scrollViewer(direction) {
-            const iframe = document.getElementById('dedicatedIframe');
-            try {
-                if (iframe.contentWindow) {
-                    if (direction === 'top') iframe.contentWindow.scrollTo(0, 0);
-                    else iframe.contentWindow.scrollTo(0, 99999);
-                }
-            } catch(e) {
-                const canvas = document.getElementById('viewerCanvas');
-                if (direction === 'top') canvas.scrollTop = 0;
-                else canvas.scrollTop = canvas.scrollHeight;
-            }
+            window.open(fullUrl, '_blank', 'noopener');
+            showToast(`تم فتح ${sourceName} في تبويب جديد ↗️`);
         }
 
         // التفاصيل والترجمة للقصص
@@ -1807,7 +1413,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `slax_backup.json`;
+            a.download = `slaxtoon_backup.json`;
             a.click();
             URL.revokeObjectURL(url);
             showToast("تم التصدير بنجاح!");
@@ -1835,6 +1441,15 @@
             };
             reader.readAsText(file);
         }
+
+        // إغلاق أي نافذة مفتوحة بزر Escape لتحسين إمكانية الوصول
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            ['modalOverlay', 'wheelModalOverlay', 'statsModalOverlay', 'iosModalOverlay'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('active')) el.classList.remove('active');
+            });
+        });
 
         updateUIBadges();
         fetchUniqueManhwa();
