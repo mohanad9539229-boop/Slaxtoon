@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SlaxToon - منصتك لتصفح المانهوا</title>
+    <title>SlaxToon - منصتك لتصفح وقراءة المانهوا</title>
     
     <!-- 🍎 إعدادات تطبيق الآيفون (iOS PWA) 🍎 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -63,6 +63,193 @@
             transition: background 0.3s;
         }
 
+        /* =========================================================
+           وضع القارئ المعزول (Isolated Reader View - /view/)
+           ========================================================= */
+        body.reader-mode {
+            padding-bottom: 0;
+            overflow: hidden;
+        }
+
+        #readerView {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #070203;
+            z-index: 50000;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #readerView.active {
+            display: flex;
+        }
+
+        .reader-topbar {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.7rem 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        .reader-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 320px;
+        }
+
+        .reader-manhwa-name {
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .reader-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .reader-btn {
+            background: #220b0e;
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .reader-btn:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .reader-btn.primary {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .chapter-input-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0 6px;
+        }
+
+        .chapter-input-box span {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            padding-left: 4px;
+        }
+
+        .chapter-input-box input {
+            width: 55px;
+            background: transparent;
+            border: none;
+            color: var(--gold-color);
+            font-weight: 800;
+            text-align: center;
+            padding: 0.4rem 0;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .reader-source-select {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 0.45rem 0.6rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            width: auto;
+        }
+
+        .reader-slug-bar {
+            background: #110506;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0.4rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        .slug-editor {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .slug-editor input {
+            flex: 1;
+            background: #080203;
+            border: 1px solid var(--border-color);
+            color: #6ee7b7;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.78rem;
+            direction: ltr;
+        }
+
+        .reader-frame-wrapper {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        .reader-frame-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        .iframe-fallback-banner {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(22, 7, 9, 0.92);
+            border: 1px solid var(--accent-color);
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 20;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+        }
+
+        /* =========================================================
+           أنماط المنصة الرئيسية
+           ========================================================= */
         header {
             background: linear-gradient(180deg, rgba(229, 9, 20, 0.2) 0%, rgba(11, 3, 4, 0) 100%);
             padding: 2.2rem 1rem 1.5rem;
@@ -199,12 +386,12 @@
         }
 
         .btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+        .btn-read-here { background: linear-gradient(135deg, #e50914 0%, #990000 100%); color: #fff; border: 1px solid #ff4d4d; font-weight: 800; }
         .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-dim); }
         .btn-ios-app { background: linear-gradient(135deg, #1d1d1f 0%, #3a3a3c 100%); color: #fff; border: 1px solid #48484a; }
         .btn-stats { background: #2b1803; color: #f59e0b; border: 1px solid #d97706; }
         .btn-arabic-source { background: #50080f; color: #ffffff; border: 1px solid var(--border-color); cursor: pointer; }
         .btn-starz { background: #200b3b; color: #d8b4fe; border: 1px solid #7e22ce; cursor: pointer; }
-        .btn-reader { background: linear-gradient(135deg, #b91c1c 0%, #450a0a 100%); color: #fff; border: 1px solid var(--accent-color); }
         .btn-random { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: #ffffff; }
         .btn-wheel { background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%); color: #fff; }
         .btn-translate { background: #0f382c; color: #6ee7b7; border: 1px solid #059669; }
@@ -304,7 +491,7 @@
             position: fixed; bottom: 25px; left: 25px; width: 55px; height: 55px; border-radius: 50%;
             background: linear-gradient(135deg, #1ed760 0%, #159643 100%); color: #000;
             display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-            box-shadow: 0 8px 25px rgba(30, 215, 96, 0.4); cursor: pointer; z-index: 9999;
+            box-shadow: 0 8px 25px rgba(30, 215, 96, 0.4); cursor: pointer; z-index: 60000;
         }
         .music-fab.playing { animation: pulse-music 2s infinite; }
         @keyframes pulse-music {
@@ -316,7 +503,7 @@
         .spotify-widget {
             position: fixed; bottom: 90px; left: 25px; width: 380px; max-width: calc(100vw - 40px);
             background: #121212; border: 1px solid #282828; border-radius: var(--radius-md);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.95); padding: 1.2rem; z-index: 9998; display: none;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.95); padding: 1.2rem; z-index: 60001; display: none;
         }
         .spotify-widget.active { display: block; }
         .spotify-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; color: var(--green-color); font-weight: bold; }
@@ -400,7 +587,7 @@
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(5, 1, 2, 0.88); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 99999; padding: 1rem; }
         .modal-overlay.active { display: flex; }
         .modal { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); max-width: 680px; width: 100%; max-height: 92vh; overflow-y: auto; text-align: right; padding: 1.5rem; position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.9); }
-        .modal-close { position: absolute; top: 1rem; left: 1rem; background: rgba(255,255,255,0.05); border: none; color: var(--text-dim); font-size: 1.2rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 5; }
+        .modal-close { position: absolute; top: 1rem; left: 1rem; background: rgba(255,255,255,0.05); border: none; color: var(--text-dim); font-size: 1.2rem; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
         .modal-header { display: flex; gap: 1.2rem; margin-bottom: 1.2rem; }
         .modal-header img { width: 130px; height: 185px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
@@ -420,100 +607,7 @@
         .status-option { flex: 1; text-align: center; padding: 6px 4px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; color: var(--text-dim); }
         .status-option.active { background: var(--accent-dark); color: #fff; font-weight: bold; }
 
-        /* 📖 القارئ المعزول بنمط الروابط المباشرة (Integrated Pattern Reader) 📖 */
-        .reader-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(4, 1, 2, 0.96);
-            backdrop-filter: blur(10px);
-            display: none;
-            flex-direction: column;
-            z-index: 100000;
-        }
-        .reader-modal-overlay.active { display: flex; }
-
-        .reader-topbar {
-            background: #140507;
-            border-bottom: 1px solid var(--border-color);
-            padding: 10px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .reader-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
-        .reader-brand {
-            font-weight: 900;
-            font-size: 0.98rem;
-            color: #fff;
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .reader-brand span { color: var(--accent-color); }
-        .reader-input {
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 7px 10px;
-            border-radius: var(--radius-sm);
-            font-size: 0.84rem;
-            outline: none;
-        }
-        .reader-input:focus { border-color: var(--accent-color); }
-        .reader-series-input {
-            flex: 1 1 250px;
-            direction: ltr;
-            text-align: left;
-        }
-        .reader-chap-input {
-            width: 90px;
-            text-align: center;
-            font-weight: 700;
-        }
-        .reader-url-preview {
-            font-size: 0.76rem;
-            color: var(--text-dim);
-            direction: ltr;
-            text-align: left;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 5px 10px;
-            border-radius: 6px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .reader-stage {
-            flex: 1;
-            position: relative;
-            background: #060203;
-            overflow: hidden;
-        }
-        .reader-stage iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-            background: #0b0304;
-        }
-        .reader-footer-bar {
-            background: #120406;
-            border-top: 1px solid var(--border-color);
-            padding: 6px 14px;
-            font-size: 0.76rem;
-            color: var(--text-dim);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            gap: 8px;
-        }
-
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background-color: var(--accent-color); color: #fff; padding: 0.8rem 1.8rem; border-radius: 30px; font-size: 0.9rem; font-weight: bold; box-shadow: 0 8px 25px rgba(229,9,20,0.5); transition: transform 0.3s; z-index: 100005; }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background-color: var(--accent-color); color: #fff; padding: 0.8rem 1.8rem; border-radius: 30px; font-size: 0.9rem; font-weight: bold; box-shadow: 0 8px 25px rgba(229,9,20,0.5); transition: transform 0.3s; z-index: 100000; }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 4rem 1rem; color: var(--text-dim); }
@@ -530,112 +624,169 @@
 </head>
 <body>
 
-    <header>
-        <div class="header-content">
-            <h1>Slax<span>Toon</span> <i class="fa-solid fa-fire-flame-curved" style="font-size: 1.8rem;"></i></h1>
-            <p class="sub">اكتشف وتابع المانهوا الكورية مع نظام فلترة شامل، ثم اقرأ من مصدرك المفضل أو عبر القارئ المباشر</p>
-        </div>
-    </header>
-
-    <div class="container">
-        
-        <div class="controls-card">
-            <div class="search-box-group">
-                <input type="text" id="directSearchInput" placeholder="ابحث باسم المانهوا بالإنجليزية/العربية أو الـ ID..." oninput="applyFilters()" onkeypress="if(event.key === 'Enter') searchDirectManhwa()">
-                <button class="btn" onclick="searchDirectManhwa()"><i class="fa-solid fa-magnifying-glass"></i> بحث مباشر</button>
+    <!-- =========================================================
+         صفحة القراءة المعزولة (/view/) داخل iframe مع أزرار التحكم
+         ========================================================= -->
+    <div id="readerView">
+        <div class="reader-topbar">
+            <div class="reader-title-group">
+                <button class="reader-btn" onclick="exitReaderView()" title="العودة للمنصة">
+                    <i class="fa-solid fa-arrow-right"></i> رجوع
+                </button>
+                <div class="reader-manhwa-name" id="readerTitle">اسم المانهوا</div>
             </div>
 
-            <div class="filter-grid">
-                <select id="genreSelect" onchange="applyFilters()">
-                    <option value="ALL">جميع التصنيفات 🎭</option>
-                    <option value="Action">أكشن (Action)</option>
-                    <option value="Fantasy">خيال (Fantasy)</option>
-                    <option value="Necromancy">مستحضر أرواح (Necromancy) 💀</option>
-                    <option value="Romance">رومانسية (Romance)</option>
-                    <option value="Drama">دراما (Drama)</option>
-                    <option value="Comedy">كوميديا (Comedy)</option>
-                    <option value="Adventure">مغامرة (Adventure)</option>
-                    <option value="Supernatural">خارق للطبيعة (Supernatural)</option>
-                    <option value="Slice of Life">شريحة من الحياة</option>
-                    <option value="Mystery">غموض (Mystery)</option>
-                </select>
+            <div class="reader-controls">
+                <button class="reader-btn" onclick="changeReaderChapter(-1)">
+                    <i class="fa-solid fa-chevron-right"></i> السابق
+                </button>
 
-                <select id="statusSelect" onchange="applyFilters()">
-                    <option value="ALL">جميع الحالات 📌</option>
-                    <option value="RELEASING">مستمر 🟢</option>
-                    <option value="FINISHED">مكتمل 🔵</option>
-                    <option value="HIATUS">متوقف مؤقتاً 🟡</option>
-                </select>
-
-                <select id="minScoreSelect" onchange="applyFilters()">
-                    <option value="0">أقل تقييم ⭐ (الكل)</option>
-                    <option value="7">⭐ 7.0 فأكثر</option>
-                    <option value="8">⭐ 8.0 فأكثر</option>
-                    <option value="8.5">⭐ 8.5 ممتاز جداً</option>
-                </select>
-
-                <select id="userStatusFilter" onchange="applyFilters()">
-                    <option value="ALL">قائمتي الشخصية 📁</option>
-                    <option value="READING">قيد القراءة 📖</option>
-                    <option value="PLANNING">أخطط لقراءتها 📌</option>
-                    <option value="COMPLETED">مكتملة ✅</option>
-                </select>
-
-                <select id="sortSelect" onchange="fetchUniqueManhwa(true)">
-                    <option value="POPULARITY_DESC">الأكثر شعبية 🔥</option>
-                    <option value="TRENDING_DESC">الأكثر تداولاً 📈</option>
-                    <option value="SCORE_DESC">الأعلى تقييماً ⭐</option>
-                    <option value="FAVOURITES_DESC">الأكثر إعجاباً ❤️</option>
-                    <option value="TITLE_ROMAJI">الاسم (أ-ي) 🔤</option>
-                </select>
-            </div>
-
-            <div class="genre-tags-bar">
-                <button class="tag-btn active" onclick="selectGenreTag('ALL', this)">الكل 🌟</button>
-                <button class="tag-btn" onclick="selectGenreTag('Action', this)">أكشن ⚔️</button>
-                <button class="tag-btn" onclick="selectGenreTag('Necromancy', this)">مستحضر أرواح 💀</button>
-                <button class="tag-btn" onclick="selectGenreTag('Fantasy', this)">خيال 🔮</button>
-                <button class="tag-btn" onclick="selectGenreTag('Adventure', this)">مغامرة 🏹</button>
-                <button class="tag-btn" onclick="selectGenreTag('Romance', this)">رومانسية ❤️</button>
-            </div>
-
-            <div class="action-buttons">
-                <div class="btn-group-left">
-                    <button class="btn" id="loadBtn" onclick="fetchUniqueManhwa(true)"><i class="fa-solid fa-rotate"></i> تحديث القائمة</button>
-                    <button class="btn btn-reader" onclick="openPatternReader()"><i class="fa-solid fa-book-open"></i> القارئ المباشر 📖</button>
-                    <button class="btn btn-wheel" onclick="openWheelModal()"><i class="fa-solid fa-dharmachakra"></i> عجلة الحظ 🎡</button>
-                    <button class="btn btn-random" onclick="pickRandomManhwa()"><i class="fa-solid fa-dice"></i> اقتراح عشوائي</button>
-                    <button class="btn btn-tab" id="favTabBtn" onclick="toggleFavView()"><i class="fa-solid fa-heart" style="color: #e50914;"></i> المفضلة (<span id="favCount">0</span>)</button>
+                <div class="chapter-input-box">
+                    <span>فصل</span>
+                    <input type="number" id="readerChapterInput" value="1" min="0" step="0.5" onchange="reloadReaderIframe()">
                 </div>
 
-                <div class="btn-group-right">
-                    <select id="themeSelector" onchange="changeTheme(this.value)" style="width: auto; padding: 0.5rem; font-size: 0.78rem;">
-                        <option value="default">ثيم أحمر ناري 🔥</option>
-                        <option value="blue">نيون أزرق ⚡</option>
-                        <option value="purple">بنفسجي ملكي 🔮</option>
-                        <option value="green">أخضر سبوتيفاي 💚</option>
+                <button class="reader-btn primary" onclick="changeReaderChapter(1)">
+                    التالي <i class="fa-solid fa-chevron-left"></i>
+                </button>
+
+                <select id="readerSourceSelect" class="reader-source-select" onchange="reloadReaderIframe()">
+                    <option value="olympustaff">TeamX (Olympus)</option>
+                    <option value="mangastar">Manga Starz</option>
+                    <option value="mangalek">MangaLek</option>
+                    <option value="azorafly">Azora Fly</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- شريط تعديل الرابط الديناميكي (Slug) في حال اختلف اسم الرابط في المصدر -->
+        <div class="reader-slug-bar">
+            <div class="slug-editor">
+                <span><i class="fa-solid fa-link"></i> معرف الرابط:</span>
+                <input type="text" id="readerSlugInput" onchange="reloadReaderIframe()" title="يمكنك تعديل الـ Slug إذا كان مختلفاً في موقع المصدر">
+                <button class="reader-btn" style="padding: 2px 8px; font-size: 0.72rem;" onclick="reloadReaderIframe()">تحديث</button>
+            </div>
+            <div id="readerGeneratedUrl" style="direction: ltr; font-family: monospace; color: var(--text-dim); max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></div>
+        </div>
+
+        <div class="reader-frame-wrapper">
+            <iframe id="chapterIframe" src="about:blank" allowfullscreen referrerpolicy="no-referrer"></iframe>
+            <div class="iframe-fallback-banner">
+                <span><i class="fa-solid fa-circle-info" style="color: var(--gold-color);"></i> إذا حظر المصدر العرض داخل الإطار:</span>
+                <a id="readerExternalFallbackBtn" href="#" target="_blank" rel="noopener" class="reader-btn primary" style="padding: 4px 10px; font-size: 0.75rem; text-decoration: none;">
+                    فتح الفصل مباشرة ↗️
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         المحتوى الرئيسي للمنصة
+         ========================================================= -->
+    <div id="mainAppWrapper">
+        <header>
+            <div class="header-content">
+                <h1>Slax<span>Toon</span> <i class="fa-solid fa-fire-flame-curved" style="font-size: 1.8rem;"></i></h1>
+                <p class="sub">اكتشف وتابع المانهوا الكورية مع نظام فلترة شامل، واقرأ الفصول مباشرة داخل الموقع</p>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="controls-card">
+                <div class="search-box-group">
+                    <input type="text" id="directSearchInput" placeholder="ابحث باسم المانهوا بالإنجليزية/العربية أو الـ ID..." oninput="applyFilters()" onkeypress="if(event.key === 'Enter') searchDirectManhwa()">
+                    <button class="btn" onclick="searchDirectManhwa()"><i class="fa-solid fa-magnifying-glass"></i> بحث مباشر</button>
+                </div>
+
+                <div class="filter-grid">
+                    <select id="genreSelect" onchange="applyFilters()">
+                        <option value="ALL">جميع التصنيفات 🎭</option>
+                        <option value="Action">أكشن (Action)</option>
+                        <option value="Fantasy">خيال (Fantasy)</option>
+                        <option value="Necromancy">مستحضر أرواح (Necromancy) 💀</option>
+                        <option value="Romance">رومانسية (Romance)</option>
+                        <option value="Drama">دراما (Drama)</option>
+                        <option value="Comedy">كوميديا (Comedy)</option>
+                        <option value="Adventure">مغامرة (Adventure)</option>
+                        <option value="Supernatural">خارق للطبيعة (Supernatural)</option>
+                        <option value="Slice of Life">شريحة من الحياة</option>
+                        <option value="Mystery">غموض (Mystery)</option>
                     </select>
-                    <button class="btn btn-stats" onclick="openStatsModal()"><i class="fa-solid fa-chart-pie"></i> إحصائياتي</button>
-                    <button class="btn btn-ios-app" onclick="openIosGuideModal()"><i class="fa-brands fa-apple"></i> iOS App</button>
-                    <div class="counter-badge">المعروض: <span id="manhwaCountNumber">0</span></div>
+
+                    <select id="statusSelect" onchange="applyFilters()">
+                        <option value="ALL">جميع الحالات 📌</option>
+                        <option value="RELEASING">مستمر 🟢</option>
+                        <option value="FINISHED">مكتمل 🔵</option>
+                        <option value="HIATUS">متوقف مؤقتاً 🟡</option>
+                    </select>
+
+                    <select id="minScoreSelect" onchange="applyFilters()">
+                        <option value="0">أقل تقييم ⭐ (الكل)</option>
+                        <option value="7">⭐ 7.0 فأكثر</option>
+                        <option value="8">⭐ 8.0 فأكثر</option>
+                        <option value="8.5">⭐ 8.5 ممتاز جداً</option>
+                    </select>
+
+                    <select id="userStatusFilter" onchange="applyFilters()">
+                        <option value="ALL">قائمتي الشخصية 📁</option>
+                        <option value="READING">قيد القراءة 📖</option>
+                        <option value="PLANNING">أخطط لقراءتها 📌</option>
+                        <option value="COMPLETED">مكتملة ✅</option>
+                    </select>
+
+                    <select id="sortSelect" onchange="fetchUniqueManhwa(true)">
+                        <option value="POPULARITY_DESC">الأكثر شعبية 🔥</option>
+                        <option value="TRENDING_DESC">الأكثر تداولاً 📈</option>
+                        <option value="SCORE_DESC">الأعلى تقييماً ⭐</option>
+                        <option value="FAVOURITES_DESC">الأكثر إعجاباً ❤️</option>
+                        <option value="TITLE_ROMAJI">الاسم (أ-ي) 🔤</option>
+                    </select>
+                </div>
+
+                <div class="genre-tags-bar">
+                    <button class="tag-btn active" onclick="selectGenreTag('ALL', this)">الكل 🌟</button>
+                    <button class="tag-btn" onclick="selectGenreTag('Action', this)">أكشن ⚔️</button>
+                    <button class="tag-btn" onclick="selectGenreTag('Necromancy', this)">مستحضر أرواح 💀</button>
+                    <button class="tag-btn" onclick="selectGenreTag('Fantasy', this)">خيال 🔮</button>
+                    <button class="tag-btn" onclick="selectGenreTag('Adventure', this)">مغامرة 🏹</button>
+                    <button class="tag-btn" onclick="selectGenreTag('Romance', this)">رومانسية ❤️</button>
+                </div>
+
+                <div class="action-buttons">
+                    <div class="btn-group-left">
+                        <button class="btn" id="loadBtn" onclick="fetchUniqueManhwa(true)"><i class="fa-solid fa-rotate"></i> تحديث القائمة</button>
+                        <button class="btn btn-wheel" onclick="openWheelModal()"><i class="fa-solid fa-dharmachakra"></i> عجلة الحظ 🎡</button>
+                        <button class="btn btn-random" onclick="pickRandomManhwa()"><i class="fa-solid fa-dice"></i> اقتراح عشوائي</button>
+                        <button class="btn btn-tab" id="favTabBtn" onclick="toggleFavView()"><i class="fa-solid fa-heart" style="color: #e50914;"></i> المفضلة (<span id="favCount">0</span>)</button>
+                    </div>
+
+                    <div class="btn-group-right">
+                        <select id="themeSelector" onchange="changeTheme(this.value)" style="width: auto; padding: 0.5rem; font-size: 0.78rem;">
+                            <option value="default">ثيم أحمر ناري 🔥</option>
+                            <option value="blue">نيون أزرق ⚡</option>
+                            <option value="purple">بنفسجي ملكي 🔮</option>
+                            <option value="green">أخضر سبوتيفاي 💚</option>
+                        </select>
+                        <button class="btn btn-stats" onclick="openStatsModal()"><i class="fa-solid fa-chart-pie"></i> إحصائياتي</button>
+                        <button class="btn btn-ios-app" onclick="openIosGuideModal()"><i class="fa-brands fa-apple"></i> iOS App</button>
+                        <div class="counter-badge">المعروض: <span id="manhwaCountNumber">0</span></div>
+                    </div>
+                </div>
+
+                <div class="recent-section" id="recentSection">
+                    <div class="recent-title"><i class="fa-solid fa-clock-rotate-left"></i> معاينة مؤخراً:</div>
+                    <div class="recent-list" id="recentList"></div>
                 </div>
             </div>
 
-            <div class="recent-section" id="recentSection">
-                <div class="recent-title"><i class="fa-solid fa-clock-rotate-left"></i> معاينة مؤخراً:</div>
-                <div class="recent-list" id="recentList"></div>
+            <div class="grid" id="manhwaGrid"></div>
+
+            <div style="text-align:center; margin: 1.8rem 0 2.5rem;">
+                <button class="btn btn-outline" id="loadMoreBtn" onclick="fetchUniqueManhwa(false)" style="display:none; padding: 0.85rem 2.2rem;">
+                    <i class="fa-solid fa-chevron-down"></i> تحميل المزيد
+                </button>
             </div>
-
         </div>
-
-        <div class="grid" id="manhwaGrid"></div>
-
-        <div style="text-align:center; margin: 1.8rem 0 2.5rem;">
-            <button class="btn btn-outline" id="loadMoreBtn" onclick="fetchUniqueManhwa(false)" style="display:none; padding: 0.85rem 2.2rem;">
-                <i class="fa-solid fa-chevron-down"></i> تحميل المزيد
-            </button>
-        </div>
-
     </div>
 
     <!-- مشغل الموسيقى -->
@@ -698,6 +849,13 @@
                 </div>
             </div>
 
+            <!-- زر القراءة المعزول المباشر داخل الموقع -->
+            <div style="margin-bottom: 1rem;">
+                <button class="btn btn-read-here" onclick="openInternalReader()" style="width: 100%; padding: 0.9rem; font-size: 1rem;">
+                    <i class="fa-solid fa-book-open"></i> قراءة هنا (فتح القارئ المعزول /view/)
+                </button>
+            </div>
+
             <div class="status-selector">
                 <div class="status-option" id="st-none" onclick="setUserStatus('NONE')">غير محدد</div>
                 <div class="status-option" id="st-reading" onclick="setUserStatus('READING')">📖 أقرأها</div>
@@ -719,9 +877,8 @@
             </div>
             <div class="modal-desc" id="modalDesc">الوصف غير متوفر حالياً.</div>
 
-            <div class="sources-title"><i class="fa-solid fa-book-bookmark"></i> مصادر القراءة والترجمة العربية:</div>
+            <div class="sources-title"><i class="fa-solid fa-book-bookmark"></i> مصادر القراءة والترجمة العربية (بحث خارجي):</div>
             <div class="modal-actions" style="margin-bottom: 1rem;">
-                <button onclick="openCurrentInPatternReader()" class="btn btn-reader"><i class="fa-solid fa-book-open"></i> قراءة داخل الموقع (Pattern Reader)</button>
                 <button id="searchMangaStarzBtn" onclick="handleSourceClick('https://manga-starz.net/?s=', 'Manga Starz')" class="btn btn-starz"><i class="fa-solid fa-star"></i> Manga Starz</button>
                 <button id="searchManhuaRTLBtn" onclick="handleSourceClick('https://manhuarmtl.com/?s=', 'ManhuaRTL')" class="btn btn-arabic-source"><i class="fa-solid fa-globe"></i> ManhuaRTL</button>
                 <button id="searchTeamXBtn" onclick="handleSourceClick('https://olympustaff.com/?s=', 'TeamX')" class="btn btn-arabic-source"><i class="fa-solid fa-layer-group"></i> TeamX</button>
@@ -735,65 +892,6 @@
                 <button class="btn" onclick="copyTitle()"><i class="fa-solid fa-copy"></i> نسخ الاسم</button>
                 <button class="btn btn-tab" id="modalFavBtn" onclick="toggleFavCurrent()"><i class="fa-solid fa-heart"></i> إضافة للمفضلة</button>
             </div>
-        </div>
-    </div>
-
-    <!-- 📖 القارئ المعزول بنمط الروابط المباشرة (Pattern Reader Modal) 📖 -->
-    <div class="reader-modal-overlay" id="patternReaderOverlay">
-        <div class="reader-topbar">
-            <div class="reader-row">
-                <div class="reader-brand">
-                    <i class="fa-solid fa-book-open-reader" style="color: var(--accent-color);"></i>
-                    SLAX <span>PATTERN READER</span>
-                </div>
-                <button class="btn btn-outline" style="padding: 0.5rem 0.9rem;" onclick="stepReaderChapter(-1)"><i class="fa-solid fa-arrow-right"></i> الفصل السابق</button>
-                <button class="btn" style="padding: 0.5rem 0.9rem;" onclick="stepReaderChapter(1)">الفصل التالي <i class="fa-solid fa-arrow-left"></i></button>
-                <button class="btn btn-outline" style="padding: 0.5rem 0.85rem;" onclick="closePatternReader()" aria-label="إغلاق القارئ"><i class="fa-solid fa-xmark"></i> إغلاق</button>
-            </div>
-
-            <div class="reader-row">
-                <select id="readerSitePreset" class="reader-input" style="width: auto;" onchange="applyReaderSitePreset()">
-                    <option value="https://olympustaff.com/series/">TeamX (olympustaff)</option>
-                    <option value="https://mangalek.com/manga/">MangaLek</option>
-                    <option value="https://manga-starz.net/manga/">Manga Starz</option>
-                    <option value="https://azorafly.com/series/">Azora Fly</option>
-                    <option value="custom">رابط مخصص ✏️</option>
-                </select>
-
-                <input
-                    type="text"
-                    id="readerSeriesInput"
-                    class="reader-input reader-series-input"
-                    value="https://olympustaff.com/series/invincible-mumu/"
-                    placeholder="رابط السلسلة الأساسي مثل https://olympustaff.com/series/invincible-mumu/"
-                >
-
-                <select id="readerPatternSelect" class="reader-input" style="width: auto;" onchange="renderPatternChapter(true)">
-                    <option value="slash_num">.../5 (مباشر)</option>
-                    <option value="chapter_dash">.../chapter-5</option>
-                    <option value="ch_dash">.../ch-5</option>
-                </select>
-
-                <input type="number" id="readerChapterInput" class="reader-input reader-chap-input" value="5" step="any" min="0" placeholder="الفصل">
-                <button class="btn" style="padding: 0.5rem 0.9rem;" onclick="renderPatternChapter(true)">عرض</button>
-                <button class="btn btn-outline" style="padding: 0.5rem 0.85rem;" onclick="openReaderExternal()"><i class="fa-solid fa-arrow-up-right-from-square"></i> خارجي</button>
-            </div>
-
-            <div class="reader-url-preview" id="readerGeneratedUrl">الرابط المولّد سيظهر هنا...</div>
-        </div>
-
-        <div class="reader-stage">
-            <iframe
-                id="readerChapterFrame"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                referrerpolicy="no-referrer-when-downgrade"
-                title="عارض الفصل المعزول"
-            ></iframe>
-        </div>
-
-        <div class="reader-footer-bar">
-            <span>إذا رفض المصدر العرض داخل iframe بسبب حماية الموقع، اضغط زر "خارجي ↗️".</span>
-            <span id="readerStatusText">جاهز</span>
         </div>
     </div>
 
@@ -893,6 +991,7 @@
         let isMusicPlaying = false;
         let currentYtId = "";
 
+        let wheelAngle = 0;
         let isSpinning = false;
         let wheelItems = [];
 
@@ -907,155 +1006,184 @@
             showToast("تم تغيير ثيم الموقع بنجاح! 🎨");
         }
 
+        /* =========================================================
+           📖 محرك القارئ المعزول وتوليد الروابط الديناميكية (/view/)
+           ========================================================= */
+        
+        // تحويل اسم المانهوا إلى Slug قياسي (مثال: "Invincible Mumu" -> "invincible-mumu")
+        function generateSlug(title) {
+            return (title || '')
+                .toString()
+                .toLowerCase()
+                .trim()
+                .replace(/['’]/g, '')           // إزالة الفواصل العليا مثل Solo's -> Solos
+                .replace(/[^a-z0-9]+/g, '-')    // استبدال أي رموز أو مسافات بشرطة
+                .replace(/^-+|-+$/g, '');       // إزالة الشرطات من البداية والنهاية
+        }
+
+        // بناء رابط الفصل بناءً على المصدر المختار
+        function buildChapterUrl(source, slug, chapter) {
+            switch (source) {
+                case 'olympustaff':
+                    return `https://olympustaff.com/series/${slug}/${chapter}`;
+                case 'mangastar':
+                    return `https://manga-starz.net/manga/${slug}/chapter-${chapter}/`;
+                case 'mangalek':
+                    return `https://mangalek.com/manga/${slug}/chapter-${chapter}/`;
+                case 'azorafly':
+                    return `https://azorafly.com/manga/${slug}/chapter-${chapter}/`;
+                default:
+                    return `https://olympustaff.com/series/${slug}/${chapter}`;
+            }
+        }
+
+        // فتح واجهة القراءة المعزولة /view/
+        function openInternalReader() {
+            if (!activeItem) return;
+            const title = activeItem.title.english || activeItem.title.romaji || "manhwa";
+            const slug = generateSlug(title);
+            const savedNote = userNotes[activeItem.id] || {};
+            const startChapter = savedNote.chapter && Number(savedNote.chapter) > 0 ? Number(savedNote.chapter) : 1;
+
+            document.getElementById('readerTitle').innerText = title;
+            document.getElementById('readerSlugInput').value = slug;
+            document.getElementById('readerChapterInput').value = startChapter;
+
+            closeModal();
+            document.body.classList.add('reader-mode');
+            document.getElementById('readerView').classList.add('active');
+
+            // تحديث مسار المتصفح إلى /view/ مع بارامترات المانهوا والفصل
+            try {
+                const newUrl = `/view/?series=${encodeURIComponent(slug)}&ch=${startChapter}`;
+                window.history.pushState({ view: 'reader', slug, ch: startChapter }, '', newUrl);
+            } catch (e) {
+                // تجاهل في حال التشغيل المحلي file://
+            }
+
+            reloadReaderIframe();
+        }
+
+        // تحديث الـ iframe عند تغيير الفصل أو المصدر أو الـ Slug
+        function reloadReaderIframe() {
+            const slug = document.getElementById('readerSlugInput').value.trim();
+            const chapter = document.getElementById('readerChapterInput').value || 1;
+            const source = document.getElementById('readerSourceSelect').value;
+
+            const targetUrl = buildChapterUrl(source, slug, chapter);
+            document.getElementById('chapterIframe').src = targetUrl;
+            document.getElementById('readerGeneratedUrl').innerText = targetUrl;
+            document.getElementById('readerExternalFallbackBtn').href = targetUrl;
+
+            // حفظ رقم الفصل تلقائياً في تقدم القراءة للمانهوا
+            if (activeItem) {
+                const existingNote = (userNotes[activeItem.id] && userNotes[activeItem.id].note) || '';
+                userNotes[activeItem.id] = { chapter: chapter, note: existingNote };
+                updateUIBadges();
+            }
+
+            try {
+                const newUrl = `/view/?series=${encodeURIComponent(slug)}&ch=${chapter}&src=${source}`;
+                window.history.replaceState({ view: 'reader', slug, ch: chapter }, '', newUrl);
+            } catch (e) {}
+        }
+
+        // التنقل بين الفصل التالي والسابق
+        function changeReaderChapter(delta) {
+            const input = document.getElementById('readerChapterInput');
+            let current = parseFloat(input.value) || 1;
+            let next = current + delta;
+            if (next < 0) next = 0;
+            input.value = next;
+            reloadReaderIframe();
+            showToast(delta > 0 ? `الانتقال إلى الفصل ${next} ⏭️` : `العودة إلى الفصل ${next} ⏮️`);
+        }
+
+        // الخروج من وضع القراءة والعودة للرئيسية
+        function exitReaderView() {
+            document.body.classList.remove('reader-mode');
+            document.getElementById('readerView').classList.remove('active');
+            document.getElementById('chapterIframe').src = 'about:blank';
+            try {
+                window.history.pushState({}, '', '/');
+            } catch (e) {}
+        }
+
+        // دعم فتح رابط /view/?series=...&ch=... مباشرة عند تحميل الصفحة
+        function checkInitialRoute() {
+            const params = new URLSearchParams(window.location.search);
+            if (window.location.pathname.includes('/view') || params.has('series')) {
+                const slug = params.get('series') || 'invincible-mumu';
+                const ch = params.get('ch') || '1';
+                const src = params.get('src') || 'olympustaff';
+
+                document.getElementById('readerTitle').innerText = slug.replace(/-/g, ' ').toUpperCase();
+                document.getElementById('readerSlugInput').value = slug;
+                document.getElementById('readerChapterInput').value = ch;
+                document.getElementById('readerSourceSelect').value = src;
+
+                document.body.classList.add('reader-mode');
+                document.getElementById('readerView').classList.add('active');
+                reloadReaderIframe();
+            }
+        }
+
+        window.addEventListener('popstate', () => {
+            if (!window.location.pathname.includes('/view') && !new URLSearchParams(window.location.search).has('series')) {
+                exitReaderView();
+            }
+        });
+
+        /* =========================================================
+           بقية دوال المنصة
+           ========================================================= */
         function openIosGuideModal() { document.getElementById('iosModalOverlay').classList.add('active'); }
         function closeIosModal() { document.getElementById('iosModalOverlay').classList.remove('active'); }
         function openStatsModal() { renderStatsData(); document.getElementById('statsModalOverlay').classList.add('active'); }
         function closeStatsModal() { document.getElementById('statsModalOverlay').classList.remove('active'); }
 
-        /* 📖 منطق القارئ المعزول بنمط الروابط المباشرة (Pattern Reader) 📖 */
-        const READER_STATE_KEY = 'slax_integrated_pattern_reader_v1';
-        let currentSlugForReader = 'invincible-mumu';
-
-        function slugifyManhwaTitle(title) {
-            return (title || '')
-                .toLowerCase()
-                .replace(/['’"]/g, '')
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '') || 'invincible-mumu';
+        function openWheelModal() {
+            document.getElementById('wheelModalOverlay').classList.add('active');
+            drawWheelCanvas();
         }
 
-        function normalizeReaderBaseUrl(raw) {
-            let clean = (raw || '').trim();
-            if (!clean) return '';
-            if (!/^https?:\/\//i.test(clean)) clean = 'https://' + clean;
-            clean = clean.replace(/\/chapter-\d+(?:\.\d+)?\/?$/i, '/');
-            clean = clean.replace(/\/ch-\d+(?:\.\d+)?\/?$/i, '/');
-            if (!clean.endsWith('/')) clean += '/';
-            return clean;
-        }
+        function closeWheelModal() { document.getElementById('wheelModalOverlay').classList.remove('active'); }
 
-        function buildPatternChapterUrl(baseRaw, chapVal, pattern) {
-            const base = normalizeReaderBaseUrl(baseRaw);
-            const num = parseFloat(chapVal);
-            if (!base || Number.isNaN(num)) return '';
-            if (pattern === 'chapter_dash') return `${base}chapter-${num}`;
-            if (pattern === 'ch_dash') return `${base}ch-${num}`;
-            return `${base}${num}`;
-        }
+        function drawWheelCanvas() {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            wheelItems = currentFetchedList.length > 0 ? currentFetchedList.slice(0, 8) : favorites.slice(0, 8);
 
-        function applyReaderSitePreset() {
-            const preset = document.getElementById('readerSitePreset').value;
-            if (preset === 'custom') return;
-            document.getElementById('readerSeriesInput').value = `${preset}${currentSlugForReader}/`;
-            if (preset.includes('mangalek') || preset.includes('manga-starz')) {
-                document.getElementById('readerPatternSelect').value = 'chapter_dash';
-            } else {
-                document.getElementById('readerPatternSelect').value = 'slash_num';
-            }
-            renderPatternChapter(true);
-        }
-
-        function saveReaderState() {
-            try {
-                localStorage.setItem(READER_STATE_KEY, JSON.stringify({
-                    base: document.getElementById('readerSeriesInput').value.trim(),
-                    pattern: document.getElementById('readerPatternSelect').value,
-                    chapter: document.getElementById('readerChapterInput').value
-                }));
-            } catch (_) {}
-        }
-
-        function loadReaderState() {
-            try {
-                const raw = localStorage.getItem(READER_STATE_KEY);
-                if (!raw) return;
-                const st = JSON.parse(raw);
-                if (st.base) document.getElementById('readerSeriesInput').value = st.base;
-                if (st.pattern) document.getElementById('readerPatternSelect').value = st.pattern;
-                if (st.chapter !== undefined) document.getElementById('readerChapterInput').value = st.chapter;
-            } catch (_) {}
-        }
-
-        function renderPatternChapter(autoSave = true) {
-            const baseInput = document.getElementById('readerSeriesInput');
-            const patternSelect = document.getElementById('readerPatternSelect');
-            const chapInput = document.getElementById('readerChapterInput');
-            const urlPreview = document.getElementById('readerGeneratedUrl');
-            const frame = document.getElementById('readerChapterFrame');
-            const statusEl = document.getElementById('readerStatusText');
-
-            const url = buildPatternChapterUrl(baseInput.value, chapInput.value, patternSelect.value);
-            if (!url) {
-                urlPreview.textContent = 'تأكد من صحة رابط السلسلة ورقم الفصل';
-                statusEl.textContent = 'بيانات غير مكتملة';
+            if(wheelItems.length === 0) {
+                document.getElementById('wheelResultBox').innerText = "يرجى جلب المانهوات أولاً لتدوير العجلة!";
                 return;
             }
 
-            urlPreview.textContent = url;
-            frame.src = url;
-            statusEl.textContent = `جاري تحميل الفصل ${chapInput.value}...`;
+            const numSegments = wheelItems.length;
+            const arcSize = (2 * Math.PI) / numSegments;
+            const colors = ['#e50914', '#160709', '#7c3aed', '#1d1d1f', '#d97706', '#0f382c', '#1e90ff', '#330b0e'];
 
-            // مزامنة رقم الفصل مع ملاحظات المانهوا النشطة تلقائياً
-            if (activeItem) {
-                const existing = userNotes[activeItem.id] || { chapter: '', note: '' };
-                userNotes[activeItem.id] = { chapter: chapInput.value, note: existing.note };
-                document.getElementById('userChapterInput').value = chapInput.value;
-                updateUIBadges();
-            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            if (autoSave) saveReaderState();
-        }
+            for (let i = 0; i < numSegments; i++) {
+                const angle = i * arcSize;
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(140, 140);
+                ctx.arc(140, 140, 140, angle, angle + arcSize);
+                ctx.lineTo(140, 140);
+                ctx.fill();
+                ctx.stroke();
 
-        function stepReaderChapter(delta) {
-            const chapInput = document.getElementById('readerChapterInput');
-            const current = parseFloat(chapInput.value);
-            const baseNum = Number.isNaN(current) ? 1 : current;
-            chapInput.value = Math.max(0, Number((baseNum + delta).toFixed(2)));
-            renderPatternChapter(true);
-        }
-
-        function openPatternReader(customSeriesUrl = null, customChap = null) {
-            if (customSeriesUrl) {
-                document.getElementById('readerSeriesInput').value = customSeriesUrl;
-            }
-            if (customChap !== null && customChap !== '') {
-                document.getElementById('readerChapterInput').value = customChap;
-            }
-            document.getElementById('patternReaderOverlay').classList.add('active');
-
-            // تحديث الرابط في شريط العنوان إلى /view- مع تمرير السلسلة والفصل
-            try {
-                const targetPath = `/view-${currentSlugForReader || ''}`;
-                const url = new URL(window.location.origin + targetPath);
-                url.searchParams.set('series', document.getElementById('readerSeriesInput').value.trim());
-                url.searchParams.set('ch', document.getElementById('readerChapterInput').value || '1');
-                window.history.pushState({ readerOpen: true }, '', url.pathname + url.search);
-            } catch (_) {}
-
-            renderPatternChapter(true);
-        }
-
-        function openCurrentInPatternReader() {
-            if (!activeItem) {
-                currentSlugForReader = '';
-                openPatternReader();
-                return;
-            }
-            const title = activeItem.title.english || activeItem.title.romaji || 'invincible-mumu';
-            currentSlugForReader = slugifyManhwaTitle(title);
-            const savedChap = (userNotes[activeItem.id] && userNotes[activeItem.id].chapter) ? userNotes[activeItem.id].chapter : 1;
-            const preset = document.getElementById('readerSitePreset').value;
-            const basePrefix = preset === 'custom' ? 'https://olympustaff.com/series/' : preset;
-            closeModal();
-            openPatternReader(`${basePrefix}${currentSlugForReader}/`, savedChap);
-        }
-
-        function closePatternReader(skipHistory = false) {
-            document.getElementById('patternReaderOverlay').classList.remove('active');
-            if (!skipHistory && window.location.pathname.startsWith('/view-')) {
-                try {
-                    window.history.pushState({ readerOpen: false }, '', '/');
-                } catch (_) {}
+                ctx.save();
+                ctx.translate(140, 140);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 11px Segoe UI";
+                const text = (wheelItems[i].title.english || wheelItems[i].title.romaji || "").substring(0, 14);
+                ctx.fillText(text, 125, 4);
+                ctx.restore();
             }
         }
 
@@ -1127,39 +1255,38 @@
 
         function applyFilters() {
             const searchTerm = document.getElementById('directSearchInput').value.toLowerCase().trim();
-        // دعم تمرير رابط السلسلة ورقم الفصل عبر المسار /view- أو المعاملات ?series=...&ch=5
-        function initFromUrlParams() {
-            try {
-                const pathname = window.location.pathname || '';
-                const params = new URLSearchParams(window.location.search);
-                const series = params.get('series');
-                const ch = params.get('ch');
+            const genreTerm = document.getElementById('genreSelect').value;
+            const statusTerm = document.getElementById('statusSelect').value;
+            const minScore = parseFloat(document.getElementById('minScoreSelect').value) || 0;
+            const userStatusTerm = document.getElementById('userStatusFilter').value;
 
-                if (pathname.startsWith('/view-')) {
-                    const slugFromPath = pathname.replace(/^\/view-/, '').replace(/\/+$/, '');
-                    if (slugFromPath) {
-                        currentSlugForReader = slugFromPath;
+            const targetList = showingFavs ? favorites : currentFetchedList;
+
+            let filtered = targetList.filter(item => {
+                if(!isClean(item)) return false;
+                
+                const engTitle = (item.title.english || '').toLowerCase();
+                const romTitle = (item.title.romaji || '').toLowerCase();
+                const itemIdStr = String(item.id);
+
+                const matchesSearch = !searchTerm || engTitle.includes(searchTerm) || romTitle.includes(searchTerm) || itemIdStr.includes(searchTerm);
+                
+                let matchesGenre = (genreTerm === 'ALL');
+                if (!matchesGenre && item.genres) {
+                    if (genreTerm === 'Necromancy') {
+                        matchesGenre = item.genres.some(g => g.toLowerCase().includes('necromancy') || g.toLowerCase().includes('summoner')) ||
+                                       (item.description && item.description.toLowerCase().includes('necromancer'));
+                    } else {
+                        matchesGenre = item.genres.includes(genreTerm);
                     }
-                    const preset = document.getElementById('readerSitePreset').value;
-                    const basePrefix = preset === 'custom' ? 'https://olympustaff.com/series/' : preset;
-                    const resolvedSeries = series || (slugFromPath ? `${basePrefix}${slugFromPath}/` : null);
-                    openPatternReader(resolvedSeries, ch || 1);
-                    return;
                 }
 
-                if (series) {
-                    openPatternReader(series, ch || 1);
-                }
-            } catch (_) {}
-        }
+                const matchesStatus = (statusTerm === 'ALL') || (item.status === statusTerm);
+                const matchesScore = (item.averageScore / 10) >= minScore;
+                const matchesUserStatus = (userStatusTerm === 'ALL') || (userStatusMap[item.id] === userStatusTerm);
 
-        window.addEventListener('popstate', () => {
-            if (window.location.pathname.startsWith('/view-')) {
-                initFromUrlParams();
-            } else {
-                closePatternReader(true);
-            }
-        });
+                return matchesSearch && matchesGenre && matchesStatus && matchesScore && matchesUserStatus;
+            });
 
             renderCards(filtered);
         }
@@ -1435,7 +1562,6 @@
             });
         }
 
-        /* 🎵 مشغل الموسيقى 🎵 */
         function toggleSpotifyWidget() { document.getElementById('spotifyWidget').classList.toggle('active'); }
         function toggleViewport() { document.getElementById('playerViewport').classList.toggle('active'); }
         function togglePlaylistView() { document.getElementById('playlistContainer').classList.toggle('active'); }
@@ -1646,71 +1772,17 @@
             navigator.clipboard.writeText(title).then(() => showToast("تم نسخ الاسم بنجاح!"));
         }
 
-        function exportData() {
-            const data = { favorites, excludedIds: Array.from(excludedSet), userStatusMap, musicPlaylist, userNotes, recentViews };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `slaxtoon_backup.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast("تم التصدير بنجاح!");
-        }
-
-        function triggerImport() { document.getElementById('importFileInput').click(); }
-
-        function importData(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = JSON.parse(evt.target.result);
-                    if (data.favorites) favorites = data.favorites;
-                    if (data.excludedIds) data.excludedIds.forEach(id => excludedSet.add(id));
-                    if (data.userStatusMap) userStatusMap = data.userStatusMap;
-                    if (data.musicPlaylist) musicPlaylist = data.musicPlaylist;
-                    if (data.userNotes) userNotes = data.userNotes;
-                    if (data.recentViews) recentViews = data.recentViews;
-                    updateUIBadges();
-                    applyFilters();
-                    showToast("تم الاستيراد بنجاح!");
-                } catch (err) {
-                    showToast("ملف النسخة الاحتياطية غير صالح!");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        // دعم تمرير رابط السلسلة ورقم الفصل عبر URL مثل ?series=...&ch=5
-        function initFromUrlParams() {
-            try {
-                const params = new URLSearchParams(window.location.search);
-                const series = params.get('series');
-                const ch = params.get('ch');
-                if (series) {
-                    openPatternReader(series, ch || 1);
-                }
-            } catch (_) {}
-        }
-
         document.addEventListener('keydown', (e) => {
             if (e.key !== 'Escape') return;
-            if (document.getElementById('patternReaderOverlay').classList.contains('active')) {
-                closePatternReader();
-                return;
-            }
             ['modalOverlay', 'wheelModalOverlay', 'statsModalOverlay', 'iosModalOverlay'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && el.classList.contains('active')) el.classList.remove('active');
             });
         });
 
-        loadReaderState();
+        checkInitialRoute();
         updateUIBadges();
         fetchUniqueManhwa();
-        initFromUrlParams();
     </script>
 </body>
 </html>
