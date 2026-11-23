@@ -712,9 +712,9 @@
                 </select>
 
                 <select id="readerModeSelect" class="reader-source-select" onchange="reloadReaderIframe()" title="طريقة العرض">
-                    <option value="clean">قارئ الصور النظيف 📖</option>
-                    <option value="proxy">إطار المصدر (Proxy) 🌐</option>
-                    <option value="direct">إطار مباشر 🖥️</option>
+                <select id="readerModeSelect" class="reader-source-select" onchange="reloadReaderIframe()" title="طريقة عرض الإطار">
+                    <option value="proxy">واجهة المصدر داخل الإطار (Proxy) 🌐</option>
+                    <option value="direct">إطار مباشر (Direct Iframe) 🖥️</option>
                 </select>
             </div>
         </div>
@@ -732,8 +732,8 @@
         </div>
 
         <div class="reader-frame-wrapper" id="readerFrameWrapper">
-            <div id="cleanReaderContainer" class="clean-images-container"></div>
-            <iframe id="chapterIframe" src="about:blank" style="display:none;" allowfullscreen referrerpolicy="no-referrer"></iframe>
+            <div id="readerLoaderBox" class="reader-status-box" style="display:none;"></div>
+            <iframe id="chapterIframe" src="about:blank" allowfullscreen referrerpolicy="no-referrer"></iframe>
         </div>
     </div>
 
@@ -1163,121 +1163,53 @@
             } catch (e) {}
 
             const iframe = document.getElementById('chapterIframe');
-            const cleanContainer = document.getElementById('cleanReaderContainer');
+            const loaderBox = document.getElementById('readerLoaderBox');
             const wrapper = document.getElementById('readerFrameWrapper');
             wrapper.scrollTop = 0;
 
             // 1. وضع الإطار المباشر
             if (mode === 'direct') {
-                cleanContainer.style.display = 'none';
+                loaderBox.style.display = 'none';
                 iframe.style.display = 'block';
                 iframe.removeAttribute('srcdoc');
                 iframe.src = targetUrl;
                 return;
             }
 
-            // 2. وضع الإطار عبر بروكسي (حقن HTML الصفحة داخل srcdoc لتجاوز X-Frame-Options)
-            if (mode === 'proxy') {
-                cleanContainer.style.display = 'flex';
-                iframe.style.display = 'none';
-                cleanContainer.innerHTML = `
-                    <div class="reader-status-box">
-                        <i class="fa-solid fa-spinner fa-spin"></i>
-                        <h3 style="color:#fff; margin-bottom:0.5rem;">جاري تحميل صفحة المصدر داخل الإطار...</h3>
-                    </div>
-                `;
-                try {
-                    const htmlText = await fetchHtmlViaProxies(targetUrl);
-                    const origin = new URL(targetUrl).origin;
-                    const injectedHtml = htmlText.replace(/<head[^>]*>/i, `$&<base href="${origin}/">`);
-                    cleanContainer.style.display = 'none';
-                    iframe.style.display = 'block';
-                    iframe.srcdoc = injectedHtml;
-                } catch (err) {
-                    cleanContainer.innerHTML = `
-                        <div class="reader-status-box">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <h3 style="color:#fff; margin-bottom:0.5rem;">المصدر محمي بحماية Cloudflare</h3>
-                            <p style="font-size:0.82rem; margin-bottom:1.2rem;">لا يسمح هذا الموقع بالفتح داخل إطار خارجي.</p>
-                            <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح الفصل مباشرة ↗️</a>
-                        </div>
-                    `;
-                }
-                return;
-            }
-
-            // 3. وضع قارئ الصور النظيف (الافتراضي)
+            // 2. وضع عرض واجهة الصفحة نفسها عبر بروكسي داخل iframe
+            loaderBox.style.display = 'flex';
             iframe.style.display = 'none';
-            iframe.src = 'about:blank';
-            cleanContainer.style.display = 'flex';
-            cleanContainer.innerHTML = `
+            loaderBox.innerHTML = `
                 <div class="reader-status-box">
                     <i class="fa-solid fa-spinner fa-spin"></i>
-                    <h3 style="color:#fff; margin-bottom:0.5rem;">جاري جلب صفحات الفصل ${chapter}...</h3>
-                    <p style="font-size:0.82rem;">يتم استخراج الصور وعرضها بدون إعلانات المصدر</p>
+                    <h3 style="color:#fff; margin-bottom:0.5rem;">جاري تحميل واجهة الفصل ${chapter} من المصدر...</h3>
+                    <p style="font-size:0.82rem;">يتم عرض صفحة الفصل بواجهتها داخل الإطار</p>
                 </div>
             `;
 
             try {
                 const htmlText = await fetchHtmlViaProxies(targetUrl);
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, 'text/html');
-                const imgs = Array.from(doc.querySelectorAll('img'));
-
-                const chapterImages = imgs
-                    .map(img => img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || img.getAttribute('src') || '')
-                    .filter(src => {
-                        if (!src || src.startsWith('data:')) return false;
-                        const lower = src.toLowerCase();
-                        if (lower.includes('logo') || lower.includes('avatar') || lower.includes('icon') || lower.includes('banner') || lower.includes('discord') || lower.includes('spinner')) return false;
-                        return /\.(jpg|jpeg|png|webp)/i.test(lower) || lower.includes('/uploads/') || lower.includes('/chapters/') || lower.includes('storage');
+                const origin = new URL(targetUrl).origin;
+                // ضبط base href لتبقى التنسيقات والصور والروابط النسبية تابعة لـ TeamX، وتمرير الصور عبر بروكسي لتفادي أي حظر
+                const proxiedHtml = htmlText
+                    .replace(/<head[^>]*>/i, `$&<base href="${origin}/">`)
+                    .replace(/(<img[^>]+src=["'])(https?:\/\/[^"']+)(["'])/gi, (match, prefix, imgSrc, suffix) => {
+                        return `${prefix}https://images.weserv.nl/?url=${encodeURIComponent(imgSrc.replace(/^https?:\/\//, ''))}${suffix}`;
                     });
 
-                const uniqueImages = [...new Set(chapterImages)];
-
-                if (uniqueImages.length === 0) {
-                    cleanContainer.innerHTML = `
-                        <div class="reader-status-box">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <h3 style="color:#fff; margin-bottom:0.5rem;">لم يتم العثور على صور الفصل</h3>
-                            <p style="font-size:0.82rem; margin-bottom:1.2rem;">تأكد من صحة <strong>معرف الرابط (Slug)</strong> بالأعلى (مثلاً: هل اسم المانهوا في المصدر مختلف؟) أو أن الموقع محمي بـ Cloudflare.</p>
-                            <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                                <button class="reader-btn" onclick="document.getElementById('readerModeSelect').value='proxy'; reloadReaderIframe();">تجربة إطار البروكسي 🌐</button>
-                                <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح بالمصدر ↗️</a>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                cleanContainer.innerHTML = '';
-                const origin = new URL(targetUrl).origin;
-                uniqueImages.forEach((imgUrl, idx) => {
-                    const resolvedUrl = imgUrl.startsWith('//') ? 'https:' + imgUrl : (imgUrl.startsWith('/') ? origin + imgUrl : imgUrl);
-                    const imgEl = document.createElement('img');
-                    imgEl.src = resolvedUrl;
-                    imgEl.alt = `صفحة ${idx + 1}`;
-                    imgEl.loading = idx < 3 ? 'eager' : 'lazy';
-                    imgEl.referrerPolicy = 'no-referrer';
-                    imgEl.onerror = function() { this.style.display = 'none'; };
-                    cleanContainer.appendChild(imgEl);
-                });
-
-                const bottomNav = document.createElement('div');
-                bottomNav.style.cssText = 'display:flex; gap:12px; margin:2rem 0; justify-content:center;';
-                bottomNav.innerHTML = `
-                    <button class="reader-btn" onclick="changeReaderChapter(-1)"><i class="fa-solid fa-chevron-right"></i> الفصل السابق</button>
-                    <button class="reader-btn primary" onclick="changeReaderChapter(1)">الفصل التالي <i class="fa-solid fa-chevron-left"></i></button>
-                `;
-                cleanContainer.appendChild(bottomNav);
-
+                loaderBox.style.display = 'none';
+                iframe.style.display = 'block';
+                iframe.srcdoc = proxiedHtml;
             } catch (err) {
-                cleanContainer.innerHTML = `
+                loaderBox.innerHTML = `
                     <div class="reader-status-box">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <h3 style="color:#fff; margin-bottom:0.5rem;">المصدر محمي بحماية Cloudflare</h3>
-                        <p style="font-size:0.82rem; margin-bottom:1.2rem;">الموقع يمنع السحب التلقائي للصور. يمكنك تجربة مصدر آخر من القائمة أو فتح الفصل مباشرة.</p>
-                        <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح الفصل مباشرة ↗️</a>
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <h3 style="color:#fff; margin-bottom:0.5rem;">تعذر تضمين واجهة المصدر داخل الإطار</h3>
+                        <p style="font-size:0.82rem; margin-bottom:1.2rem;">قد يكون الموقع مفعلاً لحماية Cloudflare أو يمنع جلب الصفحة عبر الوسطاء.</p>
+                        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                            <button class="reader-btn" onclick="document.getElementById('readerModeSelect').value='direct'; reloadReaderIframe();">محاولة الإطار المباشر 🖥️</button>
+                            <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح الفصل مباشرة ↗️</a>
+                        </div>
                     </div>
                 `;
             }
