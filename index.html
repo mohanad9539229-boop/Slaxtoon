@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -1021,11 +1022,22 @@
                 document.getElementById('readerChapterInput').value = customChap;
             }
             document.getElementById('patternReaderOverlay').classList.add('active');
+
+            // تحديث الرابط في شريط العنوان إلى /view- مع تمرير السلسلة والفصل
+            try {
+                const targetPath = `/view-${currentSlugForReader || ''}`;
+                const url = new URL(window.location.origin + targetPath);
+                url.searchParams.set('series', document.getElementById('readerSeriesInput').value.trim());
+                url.searchParams.set('ch', document.getElementById('readerChapterInput').value || '1');
+                window.history.pushState({ readerOpen: true }, '', url.pathname + url.search);
+            } catch (_) {}
+
             renderPatternChapter(true);
         }
 
         function openCurrentInPatternReader() {
             if (!activeItem) {
+                currentSlugForReader = '';
                 openPatternReader();
                 return;
             }
@@ -1038,81 +1050,12 @@
             openPatternReader(`${basePrefix}${currentSlugForReader}/`, savedChap);
         }
 
-        function closePatternReader() {
+        function closePatternReader(skipHistory = false) {
             document.getElementById('patternReaderOverlay').classList.remove('active');
-        }
-
-        function openReaderExternal() {
-            const url = buildPatternChapterUrl(
-                document.getElementById('readerSeriesInput').value,
-                document.getElementById('readerChapterInput').value,
-                document.getElementById('readerPatternSelect').value
-            );
-            if (url) window.open(url, '_blank', 'noopener,noreferrer');
-        }
-
-        document.getElementById('readerChapterInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') renderPatternChapter(true);
-        });
-
-        document.getElementById('readerSeriesInput').addEventListener('change', () => {
-            const input = document.getElementById('readerSeriesInput');
-            const match = input.value.trim().match(/\/(\d+(?:\.\d+)?)\/?$/);
-            if (match && match[1]) {
-                document.getElementById('readerChapterInput').value = match[1];
-                input.value = input.value.trim().replace(/\/(\d+(?:\.\d+)?)\/?$/, '/');
-            }
-            renderPatternChapter(true);
-        });
-
-        document.getElementById('readerChapterFrame').addEventListener('load', () => {
-            const ch = document.getElementById('readerChapterInput').value;
-            document.getElementById('readerStatusText').textContent = `تم إرسال طلب الفصل ${ch} للإطار`;
-        });
-
-        /* 🎡 كود ورسم عجلة الحظ 🎡 */
-        function openWheelModal() {
-            document.getElementById('wheelModalOverlay').classList.add('active');
-            drawWheelCanvas();
-        }
-
-        function closeWheelModal() { document.getElementById('wheelModalOverlay').classList.remove('active'); }
-
-        function drawWheelCanvas() {
-            const canvas = document.getElementById('wheelCanvas');
-            const ctx = canvas.getContext('2d');
-            wheelItems = currentFetchedList.length > 0 ? currentFetchedList.slice(0, 8) : favorites.slice(0, 8);
-
-            if(wheelItems.length === 0) {
-                document.getElementById('wheelResultBox').innerText = "يرجى جلب المانهوات أولاً لتدوير العجلة!";
-                return;
-            }
-
-            const numSegments = wheelItems.length;
-            const arcSize = (2 * Math.PI) / numSegments;
-            const colors = ['#e50914', '#160709', '#7c3aed', '#1d1d1f', '#d97706', '#0f382c', '#1e90ff', '#330b0e'];
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            for (let i = 0; i < numSegments; i++) {
-                const angle = i * arcSize;
-                ctx.beginPath();
-                ctx.fillStyle = colors[i % colors.length];
-                ctx.moveTo(140, 140);
-                ctx.arc(140, 140, 140, angle, angle + arcSize);
-                ctx.lineTo(140, 140);
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.save();
-                ctx.translate(140, 140);
-                ctx.rotate(angle + arcSize / 2);
-                ctx.textAlign = "right";
-                ctx.fillStyle = "#fff";
-                ctx.font = "bold 11px Segoe UI";
-                const text = (wheelItems[i].title.english || wheelItems[i].title.romaji || "").substring(0, 14);
-                ctx.fillText(text, 125, 4);
-                ctx.restore();
+            if (!skipHistory && window.location.pathname.startsWith('/view-')) {
+                try {
+                    window.history.pushState({ readerOpen: false }, '', '/');
+                } catch (_) {}
             }
         }
 
@@ -1184,38 +1127,39 @@
 
         function applyFilters() {
             const searchTerm = document.getElementById('directSearchInput').value.toLowerCase().trim();
-            const genreTerm = document.getElementById('genreSelect').value;
-            const statusTerm = document.getElementById('statusSelect').value;
-            const minScore = parseFloat(document.getElementById('minScoreSelect').value) || 0;
-            const userStatusTerm = document.getElementById('userStatusFilter').value;
+        // دعم تمرير رابط السلسلة ورقم الفصل عبر المسار /view- أو المعاملات ?series=...&ch=5
+        function initFromUrlParams() {
+            try {
+                const pathname = window.location.pathname || '';
+                const params = new URLSearchParams(window.location.search);
+                const series = params.get('series');
+                const ch = params.get('ch');
 
-            const targetList = showingFavs ? favorites : currentFetchedList;
-
-            let filtered = targetList.filter(item => {
-                if(!isClean(item)) return false;
-                
-                const engTitle = (item.title.english || '').toLowerCase();
-                const romTitle = (item.title.romaji || '').toLowerCase();
-                const itemIdStr = String(item.id);
-
-                const matchesSearch = !searchTerm || engTitle.includes(searchTerm) || romTitle.includes(searchTerm) || itemIdStr.includes(searchTerm);
-                
-                let matchesGenre = (genreTerm === 'ALL');
-                if (!matchesGenre && item.genres) {
-                    if (genreTerm === 'Necromancy') {
-                        matchesGenre = item.genres.some(g => g.toLowerCase().includes('necromancy') || g.toLowerCase().includes('summoner')) ||
-                                       (item.description && item.description.toLowerCase().includes('necromancer'));
-                    } else {
-                        matchesGenre = item.genres.includes(genreTerm);
+                if (pathname.startsWith('/view-')) {
+                    const slugFromPath = pathname.replace(/^\/view-/, '').replace(/\/+$/, '');
+                    if (slugFromPath) {
+                        currentSlugForReader = slugFromPath;
                     }
+                    const preset = document.getElementById('readerSitePreset').value;
+                    const basePrefix = preset === 'custom' ? 'https://olympustaff.com/series/' : preset;
+                    const resolvedSeries = series || (slugFromPath ? `${basePrefix}${slugFromPath}/` : null);
+                    openPatternReader(resolvedSeries, ch || 1);
+                    return;
                 }
 
-                const matchesStatus = (statusTerm === 'ALL') || (item.status === statusTerm);
-                const matchesScore = (item.averageScore / 10) >= minScore;
-                const matchesUserStatus = (userStatusTerm === 'ALL') || (userStatusMap[item.id] === userStatusTerm);
+                if (series) {
+                    openPatternReader(series, ch || 1);
+                }
+            } catch (_) {}
+        }
 
-                return matchesSearch && matchesGenre && matchesStatus && matchesScore && matchesUserStatus;
-            });
+        window.addEventListener('popstate', () => {
+            if (window.location.pathname.startsWith('/view-')) {
+                initFromUrlParams();
+            } else {
+                closePatternReader(true);
+            }
+        });
 
             renderCards(filtered);
         }
@@ -1770,3 +1714,5 @@
     </script>
 </body>
 </html>
+
+```
