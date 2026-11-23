@@ -968,7 +968,180 @@
             <button class="btn btn-wheel" id="spinBtn" onclick="startSpinningWheel()" style="font-size: 1rem; padding: 0.8rem 2rem;"><i class="fa-solid fa-rotate-right"></i> تدوير العجلة الآن 🎡</button>
         </div>
     </div>
-        // تحديث الـ iframe أو قارئ الصور النظيف عند تغيير الفصل أو المصدر أو الوضع
+
+    <!-- Modal الإحصائيات -->
+    <div class="modal-overlay" id="statsModalOverlay" onclick="closeStatsModal()">
+        <div class="modal" id="statsModalCard" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeStatsModal()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color:#fff; margin-bottom:0.5rem;"><i class="fa-solid fa-chart-pie" style="color:var(--accent-color);"></i> إحصائيات مكتبتك والمفضلة</h3>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="num" id="statFavCount">0</div><div class="label">مانهوا بالمفضلة</div></div>
+                <div class="stat-card"><div class="num" id="statReadingCount">0</div><div class="label">قيد القراءة حالياً</div></div>
+                <div class="stat-card"><div class="num" id="statCompletedCount">0</div><div class="label">مانهوات مكتملة</div></div>
+                <div class="stat-card"><div class="num" id="statTopGenre">--</div><div class="label">أكثر تصنيف مفضل</div></div>
+            </div>
+            <div style="margin-top: 1.2rem;">
+                <button class="btn btn-random" onclick="exportStatsPoster()"><i class="fa-solid fa-camera"></i> تصوير وبناء بوستر المفضلة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal تثبيت iOS -->
+    <div class="modal-overlay" id="iosModalOverlay" onclick="closeIosModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeIosModal()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color:#fff; margin-bottom:0.5rem;"><i class="fa-brands fa-apple" style="color:var(--accent-color);"></i> تثبيت الموقع كتطبيق آيفون</h3>
+            <div class="ios-guide-box">
+                <ol>
+                    <li>افتح الموقع عبر متصفح <strong>Safari</strong> على الآيفون.</li>
+                    <li>اضغط زر <strong>المشاركة 📤 (Share)</strong> بالأسفل.</li>
+                    <li>اختر <strong>"إضافة إلى الشاشة الرئيسية" ➕</strong>.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="importFileInput" accept=".json" onchange="importData(event)">
+    <div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i> <span id="toastMsg">تمت العملية بنجاح!</span></div>
+
+    <script>
+        const blockedGenres = ["Boys Love", "Ecchi", "Hentai", "Yaoi", "Erotica", "Shounen Ai", "Yuri", "Shoujo Ai"];
+        const FALLBACK_COVER = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="250"><rect width="100%" height="100%" fill="#160709"/><text x="50%" y="50%" fill="#b8a0a2" font-family="sans-serif" font-size="14" text-anchor="middle" dominant-baseline="middle">لا يوجد غلاف</text></svg>'
+        );
+        const initialExcluded = [136331, 137304, 117540, 130870, 97897, 115000, 151025, 103156, 137595, 119276];
+
+        const defaultMusicPlaylist = [
+            { id: 101, name: "Funk★Celeste Slowed", url: "https://youtu.be/T5iBKZmcO5s?si=1mMYa2UK7SCOm9Qo" },
+            { id: 102, name: "Phonk Audio / Song 1", url: "https://youtu.be/pmZ7hTChGAY?si=30dQRI-VePy4zlSq" },
+            { id: 103, name: "Phonk Audio / Song 2", url: "https://youtu.be/K5jh_vNO6ZM?si=30dQRI-VePy4zlSq" },
+            { id: 104, name: "Phonk Audio / Song 3", url: "https://youtu.be/GDjjGbdg3n4?si=V8MQ6mNZbDaEgDQF" }
+        ];
+
+        let savedExclusions = JSON.parse(localStorage.getItem('slax_excluded_ids')) || [];
+        let favorites = JSON.parse(localStorage.getItem('slax_favorites')) || [];
+        let userStatusMap = JSON.parse(localStorage.getItem('slax_user_status')) || {};
+        let storedMusic = JSON.parse(localStorage.getItem('slax_music_playlist')) || [];
+        let recentViews = JSON.parse(localStorage.getItem('slax_recent_views')) || [];
+        let userNotes = JSON.parse(localStorage.getItem('slax_user_notes')) || {};
+        let savedTheme = localStorage.getItem('slax_theme') || 'default';
+
+        let musicPlaylist = [...storedMusic];
+        defaultMusicPlaylist.forEach(defSong => {
+            if(!musicPlaylist.some(m => m.url === defSong.url)) musicPlaylist.unshift(defSong);
+        });
+
+        let excludedSet = new Set([...initialExcluded, ...savedExclusions]);
+        let currentFetchedList = [];
+        let currentPage = 1;
+        let activeItem = null;
+        let originalDescText = "";
+        let isTranslated = false;
+        let showingFavs = false;
+        let activeGenreTag = "ALL";
+
+        let currentPlayingUrl = "";
+        let isMusicPlaying = false;
+        let currentYtId = "";
+
+        let isSpinning = false;
+        let wheelItems = [];
+
+        if (savedTheme !== 'default') {
+            document.body.className = `theme-${savedTheme}`;
+            document.getElementById('themeSelector').value = savedTheme;
+        }
+
+        function changeTheme(themeName) {
+            document.body.className = themeName === 'default' ? '' : `theme-${themeName}`;
+            localStorage.setItem('slax_theme', themeName);
+            showToast("تم تغيير ثيم الموقع بنجاح! 🎨");
+        }
+
+        /* =========================================================
+           نظام القارئ المعزول وتوليد الروابط الديناميكي (/view/)
+           ========================================================= */
+        function generateSlug(title) {
+            if (!title) return "";
+            return title
+                .toLowerCase()
+                .replace(/['’]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+
+        function buildChapterUrl(source, slug, chapter) {
+            const cleanSlug = slug.trim() || 'invincible-mumu';
+            const ch = chapter || 1;
+            switch (source) {
+                case 'olympustaff':
+                    return `https://olympustaff.com/series/${cleanSlug}/${ch}`;
+                case 'mangastar':
+                    return `https://manga-starz.net/manga/${cleanSlug}/chapter-${ch}/`;
+                case 'mangalek':
+                    return `https://mangalek.com/manga/${cleanSlug}/chapter-${ch}/`;
+                case 'azorafly':
+                    return `https://azorafly.com/series/${cleanSlug}/chapter-${ch}/`;
+                default:
+                    return `https://olympustaff.com/series/${cleanSlug}/${ch}`;
+            }
+        }
+
+        // جلب HTML الصفحة عبر عدة وسطاء احتياطيين لتخطي الحظر
+        async function fetchHtmlViaProxies(targetUrl) {
+            const proxies = [
+                async (url) => {
+                    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+                    if (!r.ok) throw new Error('allorigins failed');
+                    const j = await r.json();
+                    return j.contents;
+                },
+                async (url) => {
+                    const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
+                    if (!r.ok) throw new Error('codetabs failed');
+                    return await r.text();
+                },
+                async (url) => {
+                    const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+                    if (!r.ok) throw new Error('corsproxy failed');
+                    return await r.text();
+                }
+            ];
+
+            for (const proxyFn of proxies) {
+                try {
+                    const html = await proxyFn(targetUrl);
+                    if (html && html.length > 200) return html;
+                } catch (e) {
+                    // الانتقال للوسيط التالي تلقائياً
+                }
+            }
+            throw new Error('All proxies blocked or failed');
+        }
+
+        function openInternalReader() {
+            if (!activeItem) return;
+            const title = activeItem.title.english || activeItem.title.romaji || "manhwa";
+            const slug = generateSlug(title);
+            const savedNote = userNotes[activeItem.id] || {};
+            const startChapter = savedNote.chapter && Number(savedNote.chapter) > 0 ? Number(savedNote.chapter) : 1;
+
+            document.getElementById('readerTitle').innerText = title;
+            document.getElementById('readerSlugInput').value = slug;
+            document.getElementById('readerChapterInput').value = startChapter;
+
+            closeModal();
+            document.body.classList.add('reader-mode');
+            document.getElementById('readerView').classList.add('active');
+
+            try {
+                const newUrl = `/view/?series=${encodeURIComponent(slug)}&ch=${startChapter}`;
+                window.history.pushState({ view: 'reader', slug, ch: startChapter }, '', newUrl);
+            } catch (e) {}
+
+            reloadReaderIframe();
+        }
+
         async function reloadReaderIframe() {
             const slug = document.getElementById('readerSlugInput').value.trim();
             const chapter = document.getElementById('readerChapterInput').value || 1;
@@ -978,7 +1151,6 @@
             const targetUrl = buildChapterUrl(source, slug, chapter);
             document.getElementById('readerExternalFallbackBtn').href = targetUrl;
 
-            // حفظ رقم الفصل تلقائياً في تقدم القراءة للمانهوا
             if (activeItem) {
                 const existingNote = (userNotes[activeItem.id] && userNotes[activeItem.id].note) || '';
                 userNotes[activeItem.id] = { chapter: chapter, note: existingNote };
@@ -999,19 +1171,42 @@
             if (mode === 'direct') {
                 cleanContainer.style.display = 'none';
                 iframe.style.display = 'block';
+                iframe.removeAttribute('srcdoc');
                 iframe.src = targetUrl;
                 return;
             }
 
-            // 2. وضع الإطار عبر بروكسي لتجاوز حظر X-Frame-Options
+            // 2. وضع الإطار عبر بروكسي (حقن HTML الصفحة داخل srcdoc لتجاوز X-Frame-Options)
             if (mode === 'proxy') {
-                cleanContainer.style.display = 'none';
-                iframe.style.display = 'block';
-                iframe.src = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
+                cleanContainer.style.display = 'flex';
+                iframe.style.display = 'none';
+                cleanContainer.innerHTML = `
+                    <div class="reader-status-box">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <h3 style="color:#fff; margin-bottom:0.5rem;">جاري تحميل صفحة المصدر داخل الإطار...</h3>
+                    </div>
+                `;
+                try {
+                    const htmlText = await fetchHtmlViaProxies(targetUrl);
+                    const origin = new URL(targetUrl).origin;
+                    const injectedHtml = htmlText.replace(/<head[^>]*>/i, `$&<base href="${origin}/">`);
+                    cleanContainer.style.display = 'none';
+                    iframe.style.display = 'block';
+                    iframe.srcdoc = injectedHtml;
+                } catch (err) {
+                    cleanContainer.innerHTML = `
+                        <div class="reader-status-box">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <h3 style="color:#fff; margin-bottom:0.5rem;">المصدر محمي بحماية Cloudflare</h3>
+                            <p style="font-size:0.82rem; margin-bottom:1.2rem;">لا يسمح هذا الموقع بالفتح داخل إطار خارجي.</p>
+                            <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح الفصل مباشرة ↗️</a>
+                        </div>
+                    `;
+                }
                 return;
             }
 
-            // 3. وضع قارئ الصور النظيف (يجلب صفحات الفصل ويعرضها بدون إعلانات أو قيود iframe)
+            // 3. وضع قارئ الصور النظيف (الافتراضي)
             iframe.style.display = 'none';
             iframe.src = 'about:blank';
             cleanContainer.style.display = 'flex';
@@ -1024,23 +1219,17 @@
             `;
 
             try {
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-                const res = await fetch(proxyUrl);
-                if (!res.ok) throw new Error('Network error');
-                const data = await res.json();
-                const htmlText = data.contents || '';
-
+                const htmlText = await fetchHtmlViaProxies(targetUrl);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, 'text/html');
                 const imgs = Array.from(doc.querySelectorAll('img'));
 
-                // تصفية صور صفحات الفصل واستبعاد الشعارات والأيقونات الصغيرة
                 const chapterImages = imgs
                     .map(img => img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || img.getAttribute('src') || '')
                     .filter(src => {
                         if (!src || src.startsWith('data:')) return false;
                         const lower = src.toLowerCase();
-                        if (lower.includes('logo') || lower.includes('avatar') || lower.includes('icon') || lower.includes('banner') || lower.includes('discord')) return false;
+                        if (lower.includes('logo') || lower.includes('avatar') || lower.includes('icon') || lower.includes('banner') || lower.includes('discord') || lower.includes('spinner')) return false;
                         return /\.(jpg|jpeg|png|webp)/i.test(lower) || lower.includes('/uploads/') || lower.includes('/chapters/') || lower.includes('storage');
                     });
 
@@ -1050,11 +1239,11 @@
                     cleanContainer.innerHTML = `
                         <div class="reader-status-box">
                             <i class="fa-solid fa-shield-halved"></i>
-                            <h3 style="color:#fff; margin-bottom:0.5rem;">تعذر استخراج الصور تلقائياً</h3>
-                            <p style="font-size:0.82rem; margin-bottom:1.2rem;">قد يكون معرف الرابط (Slug) مختلفاً في هذا الموقع أو الفصل محمي بـ Cloudflare.</p>
+                            <h3 style="color:#fff; margin-bottom:0.5rem;">لم يتم العثور على صور الفصل</h3>
+                            <p style="font-size:0.82rem; margin-bottom:1.2rem;">تأكد من صحة <strong>معرف الرابط (Slug)</strong> بالأعلى (مثلاً: هل اسم المانهوا في المصدر مختلف؟) أو أن الموقع محمي بـ Cloudflare.</p>
                             <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
                                 <button class="reader-btn" onclick="document.getElementById('readerModeSelect').value='proxy'; reloadReaderIframe();">تجربة إطار البروكسي 🌐</button>
-                                <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح الفصل مباشرة ↗️</a>
+                                <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح بالمصدر ↗️</a>
                             </div>
                         </div>
                     `;
@@ -1062,8 +1251,9 @@
                 }
 
                 cleanContainer.innerHTML = '';
+                const origin = new URL(targetUrl).origin;
                 uniqueImages.forEach((imgUrl, idx) => {
-                    const resolvedUrl = imgUrl.startsWith('//') ? 'https:' + imgUrl : (imgUrl.startsWith('/') ? new URL(targetUrl).origin + imgUrl : imgUrl);
+                    const resolvedUrl = imgUrl.startsWith('//') ? 'https:' + imgUrl : (imgUrl.startsWith('/') ? origin + imgUrl : imgUrl);
                     const imgEl = document.createElement('img');
                     imgEl.src = resolvedUrl;
                     imgEl.alt = `صفحة ${idx + 1}`;
@@ -1073,7 +1263,6 @@
                     cleanContainer.appendChild(imgEl);
                 });
 
-                // أزرار تنقل سفلية بعد نهاية الفصل
                 const bottomNav = document.createElement('div');
                 bottomNav.style.cssText = 'display:flex; gap:12px; margin:2rem 0; justify-content:center;';
                 bottomNav.innerHTML = `
@@ -1086,66 +1275,14 @@
                 cleanContainer.innerHTML = `
                     <div class="reader-status-box">
                         <i class="fa-solid fa-triangle-exclamation"></i>
-                        <h3 style="color:#fff; margin-bottom:0.5rem;">المصدر محمي أو غير متاح حالياً</h3>
-                        <p style="font-size:0.82rem; margin-bottom:1.2rem;">يمكنك تجربة مصدر آخر من القائمة بالأعلى أو فتح الفصل في تبويب خارجي.</p>
-                        <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح الفصل في تبويب جديد ↗️</a>
+                        <h3 style="color:#fff; margin-bottom:0.5rem;">المصدر محمي بحماية Cloudflare</h3>
+                        <p style="font-size:0.82rem; margin-bottom:1.2rem;">الموقع يمنع السحب التلقائي للصور. يمكنك تجربة مصدر آخر من القائمة أو فتح الفصل مباشرة.</p>
+                        <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح الفصل مباشرة ↗️</a>
                     </div>
                 `;
             }
         }
 
-        // فتح واجهة القراءة المعزولة /view/
-        function openInternalReader() {
-            if (!activeItem) return;
-            const title = activeItem.title.english || activeItem.title.romaji || "manhwa";
-            const slug = generateSlug(title);
-            const savedNote = userNotes[activeItem.id] || {};
-            const startChapter = savedNote.chapter && Number(savedNote.chapter) > 0 ? Number(savedNote.chapter) : 1;
-
-            document.getElementById('readerTitle').innerText = title;
-            document.getElementById('readerSlugInput').value = slug;
-            document.getElementById('readerChapterInput').value = startChapter;
-
-            closeModal();
-            document.body.classList.add('reader-mode');
-            document.getElementById('readerView').classList.add('active');
-
-            // تحديث مسار المتصفح إلى /view/ مع بارامترات المانهوا والفصل
-            try {
-                const newUrl = `/view/?series=${encodeURIComponent(slug)}&ch=${startChapter}`;
-                window.history.pushState({ view: 'reader', slug, ch: startChapter }, '', newUrl);
-            } catch (e) {
-                // تجاهل في حال التشغيل المحلي file://
-            }
-
-            reloadReaderIframe();
-        }
-
-        // تحديث الـ iframe عند تغيير الفصل أو المصدر أو الـ Slug
-        function reloadReaderIframe() {
-            const slug = document.getElementById('readerSlugInput').value.trim();
-            const chapter = document.getElementById('readerChapterInput').value || 1;
-            const source = document.getElementById('readerSourceSelect').value;
-
-            const targetUrl = buildChapterUrl(source, slug, chapter);
-            document.getElementById('chapterIframe').src = targetUrl;
-            document.getElementById('readerGeneratedUrl').innerText = targetUrl;
-            document.getElementById('readerExternalFallbackBtn').href = targetUrl;
-
-            // حفظ رقم الفصل تلقائياً في تقدم القراءة للمانهوا
-            if (activeItem) {
-                const existingNote = (userNotes[activeItem.id] && userNotes[activeItem.id].note) || '';
-                userNotes[activeItem.id] = { chapter: chapter, note: existingNote };
-                updateUIBadges();
-            }
-
-            try {
-                const newUrl = `/view/?series=${encodeURIComponent(slug)}&ch=${chapter}&src=${source}`;
-                window.history.replaceState({ view: 'reader', slug, ch: chapter }, '', newUrl);
-            } catch (e) {}
-        }
-
-        // التنقل بين الفصل التالي والسابق
         function changeReaderChapter(delta) {
             const input = document.getElementById('readerChapterInput');
             let current = parseFloat(input.value) || 1;
@@ -1156,17 +1293,13 @@
             showToast(delta > 0 ? `الانتقال إلى الفصل ${next} ⏭️` : `العودة إلى الفصل ${next} ⏮️`);
         }
 
-        // الخروج من وضع القراءة والعودة للرئيسية
         function exitReaderView() {
             document.body.classList.remove('reader-mode');
             document.getElementById('readerView').classList.remove('active');
             document.getElementById('chapterIframe').src = 'about:blank';
-            try {
-                window.history.pushState({}, '', '/');
-            } catch (e) {}
+            try { window.history.pushState({}, '', '/'); } catch (e) {}
         }
 
-        // دعم فتح رابط /view/?series=...&ch=... مباشرة عند تحميل الصفحة
         function checkInitialRoute() {
             const params = new URLSearchParams(window.location.search);
             if (window.location.pathname.includes('/view') || params.has('series')) {
