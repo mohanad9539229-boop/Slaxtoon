@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -330,6 +329,14 @@
             z-index: 999999;
             width: 100vw;
             height: 100vh;
+            background: #050202;
+        }
+
+        .reader-view.pseudo-fullscreen .reader-subbar,
+        .reader-view.pseudo-fullscreen .reader-external-fab,
+        .reader-view.pseudo-fullscreen ~ .music-fab,
+        .reader-view.pseudo-fullscreen ~ .spotify-widget {
+            display: none !important;
         }
 
         .reader-topbar {
@@ -773,8 +780,8 @@
                 </button>
 
                 <select id="readerSourceSelect" class="reader-source-select" onchange="reloadReaderIframe()" title="اختر المصدر المباشر">
-                    <option value="mangalek">MangaLek (مباشر)</option>
-                    <option value="mangastar">Manga Starz (مباشر)</option>
+                    <option value="lekmanga">MangaLek (lekmanga.site)</option>
+                    <option value="starzmanga">Manga Starz (starzmanga.net)</option>
                 </select>
 
                 <button type="button" class="reader-btn" id="fullscreenBtn" onclick="toggleReaderFullscreen()" title="صفحة كاملة">
@@ -1037,12 +1044,12 @@
 
         /* بناء رابط الفصل المباشر لـ MangaLek و Manga Starz فقط */
         function buildDirectChapterUrl(source, slug, chapter) {
-            const cleanSlug = (slug || '').trim() || 'invincible-mumu';
+            const cleanSlug = (slug || '').trim() || 'lu-bu-lifes-story-immortal-updates';
             const ch = Math.max(1, parseInt(chapter, 10) || 1);
-            if (source === 'mangastar') {
-                return `https://manga-starz.net/manga/${cleanSlug}/chapter-${ch}/`;
+            if (source === 'starzmanga' || source === 'mangastar') {
+                return `https://starzmanga.net/manga/${cleanSlug}/${ch}/`;
             }
-            return `https://mangalek.com/manga/${cleanSlug}/chapter-${ch}/`;
+            return `https://lekmanga.site/manga/${cleanSlug}/${ch}/`;
         }
 
         /* فتح القارئ المباشر للمانهوا الحالية */
@@ -1052,12 +1059,12 @@
             const slug = titleToSlug(title);
             const savedCh = (userNotes[activeItem.id] && parseInt(userNotes[activeItem.id].chapter, 10)) || 1;
             closeModal();
-            openReaderView(title, slug, savedCh, 'mangalek');
+            openReaderView(title, slug, savedCh, 'lekmanga');
         }
 
         /* تفعيل واجهة القارئ المباشر */
-        function openReaderView(title, slug, chapter = 1, source = 'mangalek') {
-            const cleanSource = source === 'mangastar' ? 'mangastar' : 'mangalek';
+        function openReaderView(title, slug, chapter = 1, source = 'lekmanga') {
+            const cleanSource = (source === 'starzmanga' || source === 'mangastar') ? 'starzmanga' : 'lekmanga';
             document.getElementById('readerTitle').innerText = title;
             document.getElementById('readerSlugInput').value = slug;
             document.getElementById('readerChapterInput').value = Math.max(1, parseInt(chapter, 10) || 1);
@@ -1101,11 +1108,11 @@
             const chapterInput = document.getElementById('readerChapterInput');
             const sourceSelect = document.getElementById('readerSourceSelect');
 
-            const slug = slugInput.value.trim() || 'invincible-mumu';
+            const slug = slugInput.value.trim() || 'lu-bu-lifes-story-immortal-updates';
             const chapter = Math.max(1, parseInt(chapterInput.value, 10) || 1);
             chapterInput.value = chapter;
 
-            const source = sourceSelect.value === 'mangastar' ? 'mangastar' : 'mangalek';
+            const source = (sourceSelect.value === 'starzmanga' || sourceSelect.value === 'mangastar') ? 'starzmanga' : 'lekmanga';
             sourceSelect.value = source;
 
             const directUrl = buildDirectChapterUrl(source, slug, chapter);
@@ -1128,55 +1135,74 @@
             iframe.src = directUrl;
         }
 
-        /* تبديل وضع الصفحة الكاملة للقارئ */
-        async function toggleReaderFullscreen() {
+        function syncFullscreenButtonState() {
             const readerEl = document.getElementById('readerView');
             const btn = document.getElementById('fullscreenBtn');
-            try {
-                if (!document.fullscreenElement) {
-                    if (readerEl.requestFullscreen) {
-                        await readerEl.requestFullscreen();
-                    } else if (readerEl.webkitRequestFullscreen) {
-                        readerEl.webkitRequestFullscreen();
-                    }
-                    readerEl.classList.add('pseudo-fullscreen');
-                    if (btn) btn.innerHTML = `<i class="fa-solid fa-compress"></i> خروج من الكامل`;
-                } else {
-                    if (document.exitFullscreen) {
-                        await document.exitFullscreen();
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    }
-                    readerEl.classList.remove('pseudo-fullscreen');
-                    if (btn) btn.innerHTML = `<i class="fa-solid fa-expand"></i> صفحة كاملة`;
-                }
-            } catch (err) {
-                readerEl.classList.toggle('pseudo-fullscreen');
-                const isFull = readerEl.classList.contains('pseudo-fullscreen');
-                if (btn) {
-                    btn.innerHTML = isFull
-                        ? `<i class="fa-solid fa-compress"></i> خروج من الكامل`
-                        : `<i class="fa-solid fa-expand"></i> صفحة كاملة`;
-                }
+            const isActiveFull = Boolean(document.fullscreenElement || document.webkitFullscreenElement || readerEl.classList.contains('pseudo-fullscreen'));
+            if (btn) {
+                btn.innerHTML = isActiveFull
+                    ? `<i class="fa-solid fa-compress"></i> خروج من الكامل`
+                    : `<i class="fa-solid fa-expand"></i> صفحة كاملة`;
             }
         }
 
+        /* تبديل وضع الصفحة الكاملة للقارئ */
+        async function toggleReaderFullscreen() {
+            const readerEl = document.getElementById('readerView');
+            const isPseudoFull = readerEl.classList.contains('pseudo-fullscreen');
+            const isNativeFull = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+
+            if (isPseudoFull || isNativeFull) {
+                readerEl.classList.remove('pseudo-fullscreen');
+                if (isNativeFull) {
+                    try {
+                        if (document.exitFullscreen) await document.exitFullscreen();
+                        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    } catch (err) {}
+                }
+                syncFullscreenButtonState();
+                showToast("تم الخروج من وضع الصفحة الكاملة");
+                return;
+            }
+
+            readerEl.classList.add('pseudo-fullscreen');
+            syncFullscreenButtonState();
+
+            try {
+                if (readerEl.requestFullscreen) {
+                    await readerEl.requestFullscreen();
+                } else if (readerEl.webkitRequestFullscreen) {
+                    readerEl.webkitRequestFullscreen();
+                }
+            } catch (err) {
+                // في حال حظر المتصفح أو الإطار وضع Fullscreen الأصلي، يبقى وضع pseudo-fullscreen مفعّلاً
+            }
+            showToast("تم تفعيل وضع الصفحة الكاملة 🖥️");
+        }
+
         document.addEventListener('fullscreenchange', () => {
-            const btn = document.getElementById('fullscreenBtn');
             const readerEl = document.getElementById('readerView');
             if (!document.fullscreenElement) {
                 readerEl.classList.remove('pseudo-fullscreen');
-                if (btn) btn.innerHTML = `<i class="fa-solid fa-expand"></i> صفحة كاملة`;
             }
+            syncFullscreenButtonState();
+        });
+
+        document.addEventListener('webkitfullscreenchange', () => {
+            const readerEl = document.getElementById('readerView');
+            if (!document.webkitFullscreenElement) {
+                readerEl.classList.remove('pseudo-fullscreen');
+            }
+            syncFullscreenButtonState();
         });
 
         /* فحص مسار /view/ عند فتح الصفحة */
         function checkInitialRoute() {
             const params = new URLSearchParams(window.location.search);
             if (window.location.pathname.includes('/view') || params.has('series')) {
-                const slug = params.get('series') || 'invincible-mumu';
+                const slug = params.get('series') || 'lu-bu-lifes-story-immortal-updates';
                 const ch = params.get('ch') || '1';
-                const src = params.get('src') || 'mangalek';
+                const src = params.get('src') || 'lekmanga';
                 const title = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                 openReaderView(title, slug, ch, src);
             }
@@ -1851,5 +1877,3 @@
     </script>
 </body>
 </html>
-
-```
