@@ -4,6 +4,10 @@
 "trailingSlash": false,
 "rewrites": [
 {
+"source": "/view-:slug*",
+"destination": "/index.html"
+},
+{
 "source": "/reader",
 "destination": "/index.html"
 },
