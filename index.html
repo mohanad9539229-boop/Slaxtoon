@@ -187,8 +187,9 @@
         .reader-slug-bar {
             background: #110506;
             border-bottom: 1px solid rgba(255,255,255,0.06);
-            padding: 0.4rem 1rem;
+            padding: 0.45rem 1rem;
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: 10px;
@@ -201,7 +202,8 @@
             align-items: center;
             gap: 6px;
             flex: 1;
-            max-width: 500px;
+            min-width: 240px;
+            max-width: 520px;
         }
 
         .slug-editor input {
@@ -209,7 +211,7 @@
             background: #080203;
             border: 1px solid var(--border-color);
             color: #6ee7b7;
-            padding: 3px 8px;
+            padding: 4px 8px;
             border-radius: 4px;
             font-family: monospace;
             font-size: 0.78rem;
@@ -224,39 +226,23 @@
             background: #050102;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
         }
 
         .reader-frame-wrapper iframe {
             width: 100%;
             height: 100%;
+            flex: 1;
             border: none;
             display: block;
         }
 
-        /* حاوية عرض صور الفصل النظيفة (بدون قيود iframe) */
-        .clean-images-container {
-            max-width: 820px;
-            margin: 0 auto;
-            padding: 1rem 0 6rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100%;
-        }
-
-        .clean-images-container img {
-            width: 100%;
-            height: auto;
-            display: block;
-            margin: 0;
-            user-select: none;
-        }
-
         .reader-status-box {
             text-align: center;
-            padding: 3rem 1.5rem;
+            padding: 2.5rem 1.5rem;
             color: var(--text-dim);
-            max-width: 480px;
+            max-width: 520px;
             margin: auto;
         }
 
@@ -264,41 +250,6 @@
             font-size: 2.5rem;
             color: var(--accent-color);
             margin-bottom: 1rem;
-        }
-
-        .reader-quick-bar {
-            background: rgba(22, 7, 9, 0.95);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.45rem 1rem;
-            font-size: 0.76rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .reader-frame-wrapper iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
-        .iframe-fallback-banner {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            background: rgba(22, 7, 9, 0.92);
-            border: 1px solid var(--accent-color);
-            padding: 0.6rem 1rem;
-            border-radius: var(--radius-sm);
-            font-size: 0.78rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 20;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
         }
 
         /* =========================================================
@@ -711,7 +662,6 @@
                     <option value="azorafly">Azora Fly</option>
                 </select>
 
-                <select id="readerModeSelect" class="reader-source-select" onchange="reloadReaderIframe()" title="طريقة العرض">
                 <select id="readerModeSelect" class="reader-source-select" onchange="reloadReaderIframe()" title="طريقة عرض الإطار">
                     <option value="proxy">واجهة المصدر داخل الإطار (Proxy) 🌐</option>
                     <option value="direct">إطار مباشر (Direct Iframe) 🖥️</option>
@@ -726,7 +676,7 @@
                 <input type="text" id="readerSlugInput" onchange="reloadReaderIframe()" title="يمكنك تعديل الـ Slug إذا كان مختلفاً في موقع المصدر">
                 <button class="reader-btn" style="padding: 2px 8px; font-size: 0.72rem;" onclick="reloadReaderIframe()">تحديث</button>
             </div>
-            <a id="readerExternalFallbackBtn" href="#" target="_blank" rel="noopener" class="reader-btn primary" style="padding: 3px 10px; font-size: 0.74rem; text-decoration: none; white-space: nowrap;">
+            <a id="readerExternalFallbackBtn" href="#" target="_blank" rel="noopener" class="reader-btn primary" style="padding: 4px 12px; font-size: 0.76rem; text-decoration: none; white-space: nowrap;">
                 فتح بالمصدر ↗️
             </a>
         </div>
@@ -1087,36 +1037,46 @@
             }
         }
 
-        // جلب HTML الصفحة عبر عدة وسطاء احتياطيين لتخطي الحظر
         async function fetchHtmlViaProxies(targetUrl) {
             const proxies = [
                 async (url) => {
                     const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
                     if (!r.ok) throw new Error('allorigins failed');
                     const j = await r.json();
+                    if (!j.contents || j.contents.includes('Just a moment...') || j.contents.includes('Enable JavaScript and cookies to continue')) {
+                        throw new Error('cloudflare challenge');
+                    }
                     return j.contents;
                 },
                 async (url) => {
                     const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
                     if (!r.ok) throw new Error('codetabs failed');
-                    return await r.text();
+                    const txt = await r.text();
+                    if (!txt || txt.includes('Just a moment...') || txt.includes('Enable JavaScript and cookies to continue')) {
+                        throw new Error('cloudflare challenge');
+                    }
+                    return txt;
                 },
                 async (url) => {
                     const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
                     if (!r.ok) throw new Error('corsproxy failed');
-                    return await r.text();
+                    const txt = await r.text();
+                    if (!txt || txt.includes('Just a moment...') || txt.includes('Enable JavaScript and cookies to continue')) {
+                        throw new Error('cloudflare challenge');
+                    }
+                    return txt;
                 }
             ];
 
             for (const proxyFn of proxies) {
                 try {
                     const html = await proxyFn(targetUrl);
-                    if (html && html.length > 200) return html;
+                    if (html && html.length > 300) return html;
                 } catch (e) {
                     // الانتقال للوسيط التالي تلقائياً
                 }
             }
-            throw new Error('All proxies blocked or failed');
+            throw new Error('Blocked by source or proxy');
         }
 
         function openInternalReader() {
@@ -1167,7 +1127,6 @@
             const wrapper = document.getElementById('readerFrameWrapper');
             wrapper.scrollTop = 0;
 
-            // 1. وضع الإطار المباشر
             if (mode === 'direct') {
                 loaderBox.style.display = 'none';
                 iframe.style.display = 'block';
@@ -1176,21 +1135,19 @@
                 return;
             }
 
-            // 2. وضع عرض واجهة الصفحة نفسها عبر بروكسي داخل iframe
             loaderBox.style.display = 'flex';
             iframe.style.display = 'none';
             loaderBox.innerHTML = `
                 <div class="reader-status-box">
                     <i class="fa-solid fa-spinner fa-spin"></i>
-                    <h3 style="color:#fff; margin-bottom:0.5rem;">جاري تحميل واجهة الفصل ${chapter} من المصدر...</h3>
-                    <p style="font-size:0.82rem;">يتم عرض صفحة الفصل بواجهتها داخل الإطار</p>
+                    <h3 style="color:#fff; margin-bottom:0.5rem;">جاري محاولة جلب واجهة الفصل ${chapter} من المصدر...</h3>
+                    <p style="font-size:0.82rem;">يتم فحص إمكانية عرض صفحة المصدر داخل الإطار</p>
                 </div>
             `;
 
             try {
                 const htmlText = await fetchHtmlViaProxies(targetUrl);
                 const origin = new URL(targetUrl).origin;
-                // ضبط base href لتبقى التنسيقات والصور والروابط النسبية تابعة لـ TeamX، وتمرير الصور عبر بروكسي لتفادي أي حظر
                 const proxiedHtml = htmlText
                     .replace(/<head[^>]*>/i, `$&<base href="${origin}/">`)
                     .replace(/(<img[^>]+src=["'])(https?:\/\/[^"']+)(["'])/gi, (match, prefix, imgSrc, suffix) => {
@@ -1204,10 +1161,12 @@
                 loaderBox.innerHTML = `
                     <div class="reader-status-box">
                         <i class="fa-solid fa-shield-halved"></i>
-                        <h3 style="color:#fff; margin-bottom:0.5rem;">تعذر تضمين واجهة المصدر داخل الإطار</h3>
-                        <p style="font-size:0.82rem; margin-bottom:1.2rem;">قد يكون الموقع مفعلاً لحماية Cloudflare أو يمنع جلب الصفحة عبر الوسطاء.</p>
+                        <h3 style="color:#fff; margin-bottom:0.5rem;">تعذر عرض واجهة المصدر داخل الإطار</h3>
+                        <p style="font-size:0.84rem; margin-bottom:1.2rem; line-height:1.7;">
+                            المصدر يطبق حماية تمنع البروكسيات المجانية أو الـ <strong>iframe</strong> من عرض صفحته الكاملة داخل موقع خارجي. يمكنك فتح الفصل مباشرة في تبويب جديد أو تجربة الإطار المباشر.
+                        </p>
                         <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                            <button class="reader-btn" onclick="document.getElementById('readerModeSelect').value='direct'; reloadReaderIframe();">محاولة الإطار المباشر 🖥️</button>
+                            <button class="reader-btn" onclick="document.getElementById('readerModeSelect').value='direct'; reloadReaderIframe();">تجربة الإطار المباشر 🖥️</button>
                             <a href="${targetUrl}" target="_blank" rel="noopener" class="reader-btn primary" style="text-decoration:none;">فتح الفصل مباشرة ↗️</a>
                         </div>
                     </div>
